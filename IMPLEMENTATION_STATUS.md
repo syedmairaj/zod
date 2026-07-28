@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 1 — Milestone 1: sign-in, organizations, GitHub App install, connected repositories, verified webhooks, queued runs**, plus a **landing-page milestone** (public marketing homepage; not Milestone 2), followed by landing-page redesign **Phase 1 (Design Foundation)** through **Phase 7 (Security and Trust)** per `PHASE_01`&ndash;`PHASE_07_*.md`. See `LANDING_PAGE_IMPLEMENTATION.md` for the original landing-page build. Stopped after Phase 7 per the brief's explicit "do not start Phase 8" instruction.
+**Phase 1 — Milestone 1: sign-in, organizations, GitHub App install, connected repositories, verified webhooks, queued runs**, plus a **landing-page milestone** (public marketing homepage; not Milestone 2), followed by landing-page redesign **Phase 1 (Design Foundation)** through **Phase 8 (Pricing, Early Access, and FAQ)** per `PHASE_01`&ndash;`PHASE_08_*.md`. See `LANDING_PAGE_IMPLEMENTATION.md` for the original landing-page build. Stopped after Phase 8 per the brief's explicit "do not start Phase 9" instruction.
 
 ## Completed
 
@@ -59,6 +59,10 @@
   - Trust boundary flow: GitHub (Implemented now) → Trusted worker orchestration (In development: queued-run persistence + installation-token minting; sandbox lifecycle explicitly "not built yet") → **Credential boundary** callout (tokens stop here; never passed into repository commands) → Isolated sandbox / Evidence / Decision engine (Planned architecture).
   - Ten security principles each carry a text status badge (color never sole signal). Auditability copy distinguishes application-level append-only `audit_events` from immutable external audit infrastructure. Explicit disclaimers: no SOC 2/ISO/HIPAA/GDPR/zero-trust certification claims; Docker alone not sufficient for hostile public repos; stronger isolation required before broad public execution.
   - Local `TrustStatusBadge` (same reason as Phase 5: "In development" absent from Phase 1 `StatusBadge`). Diagram is a static vertical stack readable without animation; `Reveal` only on the section header.
+- **Landing-page redesign Phase 8 (Pricing, Early Access, FAQ)**: rewrote `StatusEarlyAccess`, `PricingPreview`, and `Faq` on Phase 1 primitives with honest conversion copy.
+  - Early access: ideal-user + benefits lists; explicit "Honest product state" box (what ships today vs what does not); primary CTA = existing `primaryCtaHref` (`/sign-in` or `/dashboard`); secondary CTA = `#pricing` only (no waitlist/contact route exists — no dead button).
+  - Pricing: **Pricing coming soon**; Developer / Team / Business all labeled **Planned**; no dollar amounts (none approved in project docs); disclaimer "Plans, limits, and availability may change during early access."; no Stripe/checkout.
+  - FAQ: 10-item client accordion with native `<button aria-expanded aria-controls>` + `role="region"` panels; honest answers including production-readiness = not ready; sandbox execution planned; no absolute secret guarantees.
 
 ## Not started
 
@@ -180,6 +184,19 @@ apps/web/components/marketing/security-section.test.tsx   new: 9 tests
 
 Not modified: Phase 1 tokens/primitives, nav, hero, Phase 3–6 sections, auth/webhook/dashboard/db/worker code.
 
+## Files / modules added (landing-page redesign Phase 8: Pricing, Early Access, FAQ)
+
+```
+apps/web/components/marketing/status-early-access.tsx        rewritten
+apps/web/components/marketing/status-early-access.test.tsx   new: 4 tests
+apps/web/components/marketing/pricing-preview.tsx            rewritten
+apps/web/components/marketing/pricing-preview.test.tsx       new: 4 tests
+apps/web/components/marketing/faq.tsx                        rewritten: button accordion, 10 items
+apps/web/components/marketing/faq.test.tsx                   rewritten: 5 tests
+```
+
+Not modified: Phase 1 tokens/primitives, nav, hero, Phase 3–7 sections, auth/webhook/dashboard/db code. No billing APIs added.
+
 ## Files / modules added (landing page)
 
 See `LANDING_PAGE_IMPLEMENTATION.md` section 8 for the full file list
@@ -238,6 +255,8 @@ tests/integration/
 - `apps/web` (Phase 5, `feature-bento.test.tsx`, 13 tests): headline and `#product` anchor (the exact target the header nav's "Product" link points at); all six card titles present in the specified 1&ndash;6 order; every status label is exactly one of the four honest labels (one "In development", five "Planned", zero "Available"/"Beta"); MCP Firewall specifically asserted "Planned" (not just "not Available"); Project Brain's "not a claim of perfect or complete understanding" hedge; all five Agent Guard policy-outcome pill labels; all seven evidence-backed-finding attributes (via body copy) plus the microvisual's `webhook.ts:42` / `POL-TENANT-01` / remediation rows; all six deterministic-check names in the validator microvisual; MCP tool/scope/budget/audit fact rows; the "confirming, downgrading, or rejecting" verifier-challenge language plus its two labeled rows; every card's title/status/body rendered via `toBeVisible()` with `useReducedMotion` mocked true (see note below) to prove nothing is hover-only; that all 6 decorative spotlight overlays are `aria-hidden`; and an explicit reduced-motion visibility check. Full `components/marketing` suite (17 files, 81 tests) re-run as this phase's gate.
 - `apps/web` (Phase 6, `evidence-tabs.test.tsx` 9 tests + `workflow-integrations.test.tsx` 5 tests): three tabs with correct labels/order; default aria-selected; file + line range + policy + verifier + remediation on each scenario (via click); Arrow Left/Right and Home/End; `aria-controls`/`aria-labelledby` wiring; no hover-only content; workflow headline + agent-agnostic copy; GitLab and MCP marked Planned; no partnership/endorsement implication language; five-step flow labels present. Full marketing suite after shared `FindingCard`/`CodeDiff` changes: 18 files, 92 tests, all passing.
 - `apps/web` (Phase 7, `security-section.test.tsx`, 9 tests): headline + supporting copy + `#security`; five boundary stages; credential-stop copy; all ten principles present with text statuses; sandbox/egress Planned; audit-ledger distinction; Docker-not-sufficient + stronger-isolation disclaimer; no enterprise-grade/bank-grade/absolute-guarantee wording (banned terms only inside explicit disclaimer); reduced-motion visibility. Full marketing suite: 19 files, 101 tests.
+- `apps/web` (Phase 8): `status-early-access.test.tsx` (4), `pricing-preview.test.tsx` (4), `faq.test.tsx` (5) — CTAs to real destinations; all plans Planned with no `$`; pricing disclaimer; FAQ ARIA expand/collapse + keyboard Enter; production-readiness honesty; no fake urgency/social proof. Full marketing suite: 21 files, 112 tests.
+- Manual verification actually executed, Phase 8: `rm -rf .next && npm run build`; `next start`; screenshots at 1440px (early access, pricing, FAQ with keyboard-opened item + focus ring) and 390px; 360/390 `scrollWidth === clientWidth`.
 - Manual verification actually executed, Phase 7: `rm -rf .next && npm run build`; `next start`; Puppeteer screenshots at 1440px and 390px; reduced-motion emulation confirmed GitHub/credential/principle content present immediately; 360/390 `scrollWidth === clientWidth`.
 - Manual verification actually executed, Phase 6: `rm -rf .next && npm run build`; `next start` on an isolated port; Puppeteer screenshots at 1440px (evidence + workflow) and 390px (both); keyboard ArrowRight + `getComputedStyle` confirmed focus ring (`box-shadow` focus-ring token) on the active tab; 360px and 390px checks confirmed `document.documentElement.scrollWidth === clientWidth` (Known issue #17 closed for this surface).
   - Note: the first pass at the "not hover-only" test used `toBeVisible()` without mocking `useReducedMotion`, and every card failed &mdash; not a real bug, but `Reveal`'s `motion.div` staying at its `initial={{opacity:0}}` inline style forever under jsdom's default (non-reduced-motion) `matchMedia` mock plus a no-op `IntersectionObserver` that never fires `whileInView`. Fixed by mocking `useReducedMotion: () => true` in the test file, the same pattern already used by `hero.test.tsx`.
@@ -357,7 +376,7 @@ Every Cursor task must update:
 
 ## Next recommended vertical slice
 
-The landing page (and these redesign phases within it) is a self-contained detour and doesn't change the underlying product recommendation below. Per `PHASE_07_SECURITY_AND_TRUST.md`'s stop condition and the user's explicit instruction, **Phase 8 of the landing-page redesign has not been started** and should not begin without a separate go-ahead.
+The landing page (and these redesign phases within it) is a self-contained detour and doesn't change the underlying product recommendation below. Per `PHASE_08_PRICING_EARLY_ACCESS_FAQ.md`'s stop condition and the user's explicit instruction, **Phase 9 of the landing-page redesign has not been started** and should not begin without a separate go-ahead.
 
 Repository profiling (Milestone 2 groundwork): on repository connection, enqueue a job (in-process for now, no queue infra yet) that clones the default branch via a short-lived installation token, detects language/framework/package manager/test runner/lint/build commands and `AGENTS.md`-equivalent instruction files, and persists a `repository_profiles` row. This is the first slice that requires *reading* repository content (still not executing it) and sets up the inputs the validation engine will need later, while staying inside "no code execution" boundaries.
 
