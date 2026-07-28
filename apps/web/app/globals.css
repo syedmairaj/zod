@@ -1,0 +1,260 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Root cause (proven, not assumed): Tailwind's border-width utilities (e.g.
+ * `border`, `border-b`, `border-t`) only set border-width and border-color --
+ * they render nothing unless `border-style` is also `solid`, and without an
+ * explicit `border-width: 0` reset, elements that never use a border utility
+ * fall back to the browser's initial border-width ("medium", ~3px), which
+ * becomes visible everywhere once `border-style` is non-`none`. Tailwind's
+ * own preflight normally supplies exactly this reset as a global default, but
+ * preflight is disabled here (see the note in tailwind.config.ts) to protect
+ * the dashboard's hand-written CSS, which sets `border` as a full shorthand
+ * everywhere and doesn't need it. `@layer base` places this at the same
+ * cascade position preflight would have used, so utility classes like
+ * `border-critical/40` (equal specificity, later in the utilities layer)
+ * still correctly override the color. Scoped to `.marketing-root` only.
+ */
+@layer base {
+  .marketing-root,
+  .marketing-root *,
+  .marketing-root *::before,
+  .marketing-root *::after {
+    border-width: 0;
+    border-style: solid;
+    border-color: #22262d;
+  }
+}
+
+/*
+ * Two token systems intentionally coexist here:
+ *
+ * 1. The CSS custom properties below (`--bg`, `--surface`, `.button`, `.card`,
+ *    etc.) style the Milestone-1 dashboard/auth/org routes, which predate
+ *    Tailwind and don't use it (`corePlugins.preflight` is disabled in
+ *    tailwind.config.ts specifically so this block keeps working unmodified).
+ * 2. The marketing routes (`app/(marketing)/**`) use Tailwind utility classes
+ *    driven by the `theme.extend.colors` tokens in tailwind.config.ts
+ *    (`bg`, `surface`, `ink`, `accent`, `critical`, `focus-ring`, etc).
+ *
+ * The two palettes are deliberately kept in near-identical values (see the
+ * hex codes below vs. tailwind.config.ts) but are not code-shared, so a
+ * palette change must currently be applied in both places. Do not add new
+ * marketing styling here -- extend tailwind.config.ts instead.
+ */
+:root {
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+  --font-mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --bg: #0b0d10;
+  --surface: #121417;
+  --surface-raised: #181b1f;
+  --border: #262b31;
+  --text-primary: #f2f3f5;
+  --text-secondary: #9aa3ad;
+  --accent: #5b8cff;
+  --accent-soft: rgba(91, 140, 255, 0.12);
+  --danger: #ef5a5a;
+  --warning: #e2a03f;
+  --success: #4cc38a;
+  --mono: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--sans);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/*
+ * A single, consistent focus-visible treatment across both the marketing
+ * (Tailwind) and dashboard (hand-written CSS) surfaces, so keyboard focus is
+ * always visibly distinguishable regardless of which styling system an
+ * element belongs to. Only applies for keyboard/programmatic focus
+ * (`:focus-visible`), not mouse clicks.
+ */
+:focus-visible {
+  outline: 2px solid #8bb4ff;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+a {
+  color: var(--accent);
+}
+
+code,
+.mono {
+  font-family: var(--mono);
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 24px 96px;
+}
+
+.topbar {
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.card-raised {
+  background: var(--surface-raised);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #06090f;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+
+.input {
+  width: 100%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.muted {
+  color: var(--text-secondary);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.badge-queued {
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
+}
+
+.badge-superseded {
+  color: var(--text-secondary);
+}
+
+.badge-error,
+.badge-failed {
+  color: var(--danger);
+}
+
+.badge-passed {
+  color: var(--success);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  text-align: left;
+  color: var(--text-secondary);
+  font-weight: 500;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-secondary);
+}
+
+.error-banner {
+  background: rgba(239, 90, 90, 0.1);
+  border: 1px solid rgba(239, 90, 90, 0.35);
+  color: #ffb3b3;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.success-banner {
+  background: rgba(76, 195, 138, 0.1);
+  border: 1px solid rgba(76, 195, 138, 0.35);
+  color: #a9e9cb;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
