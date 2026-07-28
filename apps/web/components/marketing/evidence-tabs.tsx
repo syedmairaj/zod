@@ -4,8 +4,11 @@ import { motion } from "motion/react";
 import { useId, useState, type KeyboardEvent } from "react";
 import { cn } from "@/lib/cn";
 import { DURATION, EASE_OUT } from "@/lib/motion/tokens";
+import { useReducedMotion } from "@/lib/motion/use-reduced-motion";
 import { CodeDiff, type DiffLine } from "./code-diff";
 import { FindingCard, type Finding } from "./finding-card";
+import { MarketingSection } from "./primitives/marketing-section";
+import { SectionHeader } from "./primitives/section-header";
 
 interface Example {
   id: string;
@@ -17,128 +20,182 @@ interface Example {
 
 const EXAMPLES: Example[] = [
   {
-    id: "tenant-isolation",
-    tabLabel: "Tenant isolation",
-    filename: "packages/db/src/repositories/pull-requests.ts",
+    id: "missing-tenant",
+    tabLabel: "Missing tenant constraint",
+    filename: "app/api/orders/[id]/route.ts",
     diff: [
-      { type: "context", content: "export async function listPullRequests(db: Queryable) {" },
-      { type: "remove", content: "  return db.query(`select * from pull_requests`);" },
-      { type: "add", content: "  return db.query(" },
-      { type: "add", content: "    `select * from pull_requests where organization_id = $1`," },
-      { type: "add", content: "    [organizationId]," },
-      { type: "add", content: "  );" },
+      { type: "context", lineNumber: 42, content: "export async function GET(" },
+      { type: "context", lineNumber: 43, content: "  request: Request," },
+      { type: "context", lineNumber: 44, content: "  { params }: { params: { id: string } }," },
+      { type: "context", lineNumber: 45, content: ") {" },
+      { type: "remove", lineNumber: 46, content: "  const order = await db.orders.findById(params.id);" },
+      { type: "add", lineNumber: 46, content: "  const order = await db.orders.findById({" },
+      { type: "add", content: "    id: params.id," },
+      { type: "add", content: "    organizationId: session.organizationId," },
+      { type: "add", content: "  });" },
+      { type: "context", lineNumber: 47, content: "  if (!order) return Response.json({ error: \"Not found\" }, { status: 404 });" },
+      { type: "context", lineNumber: 48, content: "  return Response.json(order);" },
       { type: "context", content: "}" },
     ],
     finding: {
-      claim: "Tenant-owned query is missing organization_id",
-      file: "packages/db/src/repositories/pull-requests.ts",
+      title: "Tenant-owned order query is missing organization_id.",
+      claim: "A tenant-owned route loads an order by primary key alone, so any authenticated caller who guesses an ID can read another organization's row.",
+      observed: "The route fetches an order using only the order ID.",
+      expected: "The query must also constrain organization_id.",
+      file: "app/api/orders/[id]/route.ts",
       line: 42,
+      lineEnd: 48,
+      policy: "TENANCY-001",
       severity: "critical",
       source: "Static analysis + architecture review",
-      confidenceBasis: "Query pattern matched against tenant-isolation rule set",
+      confidenceBasis: "Route query matched against the tenant-isolation contract; middleware does not inject organization scope.",
       verifierStatus: "confirmed",
-      recommendedAction: "Add organization_id predicate before merge.",
+      verifierDetail: "Confirmed after checking middleware and route wrappers.",
+      recommendedAction: "Add organization_id to the query and add a cross-tenant access test.",
     },
   },
   {
     id: "schema-drift",
-    tabLabel: "Schema drift",
-    filename: "packages/db/migrations/0007_add_run_metadata.sql",
+    tabLabel: "Schema and generated-type drift",
+    filename: "supabase/migrations/..._add_fulfillment_status.sql",
     diff: [
-      { type: "context", content: "alter table validation_runs" },
-      { type: "add", content: "  add column metadata jsonb not null default '{}';" },
+      { type: "context", content: "-- migration" },
+      { type: "add", content: "alter table orders" },
+      { type: "add", content: "  add column fulfillment_status text not null default 'pending';" },
       { type: "context", content: "" },
-      { type: "remove", content: "-- database.types.ts not regenerated" },
+      { type: "context", content: "// types/database.generated.ts" },
+      { type: "remove", content: "fulfillment_status: never; // column missing from generated types" },
+      { type: "add", content: "fulfillment_status: string;" },
     ],
     finding: {
-      claim: "Migration changed schema but generated types were not updated",
-      file: "packages/db/migrations/0007_add_run_metadata.sql",
-      line: 12,
+      title: "Database migration and generated application types are out of sync.",
+      claim: "A migration introduces orders.fulfillment_status, but the checked-in generated types still describe the previous schema.",
+      observed: "Migration adds orders.fulfillment_status.",
+      expected: "Generated database types must include the new column.",
+      file: "supabase/migrations/2026xxxx_add_fulfillment_status.sql",
+      line: 1,
+      lineEnd: 3,
       severity: "warning",
       source: "Schema diff vs. generated types",
-      confidenceBasis: "Column added in migration absent from database.types.ts",
+      confidenceBasis: "Column present in migration SQL is absent from types/database.generated.ts.",
       verifierStatus: "confirmed",
-      recommendedAction: "Regenerate types and commit alongside the migration.",
+      verifierDetail: "Confirmed.",
+      recommendedAction: "Regenerate database types and rerun typecheck.",
     },
   },
   {
     id: "webhook-order",
-    tabLabel: "Webhook ordering",
-    filename: "app/api/github/webhook/route.ts",
+    tabLabel: "Unsafe webhook verification order",
+    filename: "app/api/webhooks/github/route.ts",
     diff: [
-      { type: "remove", content: "const payload = JSON.parse(rawBody);" },
-      { type: "remove", content: "verifySignature(rawBody, signature);" },
-      { type: "add", content: "verifySignature(rawBody, signature);" },
-      { type: "add", content: "const payload = JSON.parse(rawBody);" },
+      { type: "context", lineNumber: 18, content: "export async function POST(request: Request) {" },
+      { type: "context", lineNumber: 19, content: "  const signature = request.headers.get(\"x-hub-signature-256\");" },
+      { type: "context", lineNumber: 20, content: "  const rawBody = await request.text();" },
+      { type: "remove", lineNumber: 21, content: "  const payload = JSON.parse(rawBody);" },
+      { type: "remove", lineNumber: 22, content: "  verifySignature(rawBody, signature);" },
+      { type: "add", lineNumber: 21, content: "  verifySignature(rawBody, signature);" },
+      { type: "add", lineNumber: 22, content: "  const payload = JSON.parse(rawBody);" },
+      { type: "context", lineNumber: 31, content: "  return handleWebhook(payload);" },
+      { type: "context", content: "}" },
     ],
     finding: {
-      claim: "Webhook handler parses payload before signature verification",
-      file: "app/api/github/webhook/route.ts",
+      title: "Webhook body is parsed before signature verification.",
+      claim: "Parsing the body before verifying the HMAC lets an attacker force expensive JSON work (and any side effects of a bad parse) before authenticity is established.",
+      observed: "JSON parsing occurs before the raw request body is verified.",
+      expected: "Signature verification must use the untouched raw body.",
+      file: "app/api/webhooks/github/route.ts",
       line: 18,
+      lineEnd: 31,
+      policy: "WEBHOOK-002",
       severity: "critical",
       source: "Control-flow analysis",
-      confidenceBasis: "Verification call occurs after JSON.parse on request body",
-      verifierStatus: "disputed",
-      recommendedAction: "Human review requested: confirm ordering intent before blocking merge.",
+      confidenceBasis: "Verification call occurs after JSON.parse on the request body.",
+      verifierStatus: "confirmed",
+      verifierDetail: "Confirmed.",
+      recommendedAction: "Verify the signature before parsing or transforming the body.",
     },
   },
 ];
 
-// EXAMPLES is a fixed, nonempty literal declared above, so this is safe.
 const FIRST_EXAMPLE = EXAMPLES[0]!;
 
 export function EvidenceTabs() {
   const [activeId, setActiveId] = useState(FIRST_EXAMPLE.id);
   const baseId = useId();
+  const reduced = useReducedMotion();
   const activeIndex = EXAMPLES.findIndex((example) => example.id === activeId);
   const active = EXAMPLES.find((example) => example.id === activeId) ?? FIRST_EXAMPLE;
 
+  const focusTab = (exampleId: string) => {
+    setActiveId(exampleId);
+    document.getElementById(`${baseId}-tab-${exampleId}`)?.focus();
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+    const key = event.key;
+    if (key !== "ArrowRight" && key !== "ArrowLeft" && key !== "Home" && key !== "End") return;
     event.preventDefault();
-    const direction = event.key === "ArrowRight" ? 1 : -1;
-    const nextIndex = (activeIndex + direction + EXAMPLES.length) % EXAMPLES.length;
+
+    let nextIndex = activeIndex;
+    if (key === "ArrowRight") nextIndex = (activeIndex + 1) % EXAMPLES.length;
+    if (key === "ArrowLeft") nextIndex = (activeIndex - 1 + EXAMPLES.length) % EXAMPLES.length;
+    if (key === "Home") nextIndex = 0;
+    if (key === "End") nextIndex = EXAMPLES.length - 1;
+
     const nextExample = EXAMPLES[nextIndex] ?? FIRST_EXAMPLE;
-    setActiveId(nextExample.id);
-    document.getElementById(`${baseId}-tab-${nextExample.id}`)?.focus();
+    focusTab(nextExample.id);
   };
 
   return (
-    <section className="mx-auto max-w-content px-5 py-20 sm:px-8">
-      <p className="text-xs font-semibold uppercase tracking-wide text-accent">Evidence</p>
-      <h2 className="mt-3 max-w-2xl text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-        Findings you can check yourself.
-      </h2>
+    <MarketingSection id="evidence" className="min-w-0 overflow-x-clip">
+      <SectionHeader
+        eyebrow="Evidence"
+        title="Every decision should be traceable to evidence."
+        description="Three representative findings — each one tied to a file, a line range, a policy, and an independent verifier result."
+      />
 
-      <div role="tablist" aria-label="Example findings" onKeyDown={handleKeyDown} className="mt-8 flex gap-1 border-b border-border">
-        {EXAMPLES.map((example) => {
-          const selected = example.id === activeId;
-          return (
-            <button
-              key={example.id}
-              id={`${baseId}-tab-${example.id}`}
-              role="tab"
-              type="button"
-              aria-selected={selected}
-              aria-controls={`${baseId}-panel-${example.id}`}
-              tabIndex={selected ? 0 : -1}
-              onClick={() => setActiveId(example.id)}
-              className={cn(
-                "relative appearance-none px-4 py-3 text-sm font-medium transition-colors",
-                selected ? "text-ink" : "text-ink-muted hover:text-ink",
-              )}
-            >
-              {example.tabLabel}
-              {selected && (
-                <motion.span
-                  layoutId="evidence-tab-indicator"
-                  className="absolute inset-x-0 -bottom-px h-0.5 bg-accent"
-                  transition={{ duration: DURATION.base, ease: EASE_OUT }}
-                />
-              )}
-            </button>
-          );
-        })}
+      <div className="mt-8 min-w-0 max-w-full overflow-x-auto border-b border-border">
+        <div
+          role="tablist"
+          aria-label="Example findings"
+          onKeyDown={handleKeyDown}
+          className="flex w-max min-w-full gap-1"
+        >
+          {EXAMPLES.map((example) => {
+            const selected = example.id === activeId;
+            return (
+              <button
+                key={example.id}
+                id={`${baseId}-tab-${example.id}`}
+                role="tab"
+                type="button"
+                aria-selected={selected}
+                aria-controls={`${baseId}-panel-${example.id}`}
+                tabIndex={selected ? 0 : -1}
+                onClick={() => setActiveId(example.id)}
+                className={cn(
+                  "relative shrink-0 appearance-none bg-transparent px-4 py-3 text-body-sm font-medium transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg",
+                  selected ? "text-ink" : "text-ink-muted hover:text-ink",
+                )}
+              >
+                {example.tabLabel}
+                {selected ? (
+                  reduced ? (
+                    <span aria-hidden="true" className="absolute inset-x-0 -bottom-px h-0.5 bg-accent" />
+                  ) : (
+                    <motion.span
+                      layoutId="evidence-tab-indicator"
+                      aria-hidden="true"
+                      className="absolute inset-x-0 -bottom-px h-0.5 bg-accent"
+                      transition={{ duration: DURATION.base, ease: EASE_OUT }}
+                    />
+                  )
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <div
@@ -146,11 +203,11 @@ export function EvidenceTabs() {
         role="tabpanel"
         aria-labelledby={`${baseId}-tab-${active.id}`}
         tabIndex={0}
-        className="mt-6 grid gap-5 lg:grid-cols-2"
+        className="mt-6 grid min-w-0 gap-5 lg:grid-cols-2"
       >
         <CodeDiff filename={active.filename} lines={active.diff} />
         <FindingCard finding={active.finding} />
       </div>
-    </section>
+    </MarketingSection>
   );
 }
