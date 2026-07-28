@@ -21,7 +21,7 @@ export function Hero({ primaryCtaHref, primaryCtaLabel }: HeroProps) {
 
           <Reveal delay={0.05}>
             <h1 className="mt-4 max-w-xl text-[2.5rem] font-semibold leading-[1.08] tracking-tight text-ink sm:text-5xl">
-              The reliability layer for AI-generated code.
+              The reliability and governance layer for AI-generated software—from code creation to agent execution.
             </h1>
           </Reveal>
 

@@ -12,7 +12,9 @@ describe("Hero", () => {
 
     const headings = screen.getAllByRole("heading", { level: 1 });
     expect(headings).toHaveLength(1);
-    expect(headings[0]).toHaveTextContent("The reliability layer for AI-generated code.");
+    expect(headings[0]).toHaveTextContent(
+      "The reliability and governance layer for AI-generated software—from code creation to agent execution.",
+    );
 
     const cta = screen.getByRole("link", { name: "Connect GitHub" });
     expect(cta).toHaveAttribute("href", "/sign-in");
