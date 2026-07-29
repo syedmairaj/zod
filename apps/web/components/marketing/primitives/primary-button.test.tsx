@@ -23,6 +23,13 @@ describe("PrimaryButton", () => {
     expect(link.className).toContain("focus-visible:ring-2");
   });
 
+  it("uses tactile press instead of hover scale", () => {
+    render(<PrimaryButton href="/sign-in">Connect GitHub</PrimaryButton>);
+    const link = screen.getByRole("link", { name: "Connect GitHub" });
+    expect(link.className).toContain("active:scale-[0.98]");
+    expect(link.className).not.toContain("hover:scale-");
+  });
+
   it("disables the native button variant when disabled is set", () => {
     render(<PrimaryButton disabled>Submit</PrimaryButton>);
     expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();

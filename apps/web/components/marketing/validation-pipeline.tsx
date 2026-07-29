@@ -71,7 +71,7 @@ export function ValidationPipeline() {
   const reduced = useReducedMotion();
 
   return (
-    <MarketingSection id="how-it-works" tinted>
+    <MarketingSection id="how-it-works" className="min-w-0 overflow-x-clip" tinted>
       <Reveal>
         <SectionHeader
           eyebrow="How it works"

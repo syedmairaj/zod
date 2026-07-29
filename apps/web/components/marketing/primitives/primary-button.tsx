@@ -6,7 +6,7 @@ const FOCUS_RING =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg";
 
 const BASE =
-  "appearance-none inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-transform hover:scale-[1.02] disabled:pointer-events-none disabled:opacity-50";
+  "appearance-none inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-semibold text-accent-foreground transition-[transform,box-shadow] duration-150 ease-out will-change-transform active:scale-[0.98] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-px [@media(hover:hover)_and_(pointer:fine)]:hover:shadow-edge disabled:pointer-events-none disabled:opacity-50";
 
 interface CommonProps {
   className?: string;

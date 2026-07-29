@@ -18,4 +18,11 @@ describe("SecondaryButton", () => {
     render(<SecondaryButton>Cancel</SecondaryButton>);
     expect(screen.getByRole("button", { name: "Cancel" }).className).toContain("focus-visible:ring-2");
   });
+
+  it("uses tactile press and fine-pointer hover elevation", () => {
+    render(<SecondaryButton>Cancel</SecondaryButton>);
+    const button = screen.getByRole("button", { name: "Cancel" });
+    expect(button.className).toContain("active:scale-[0.98]");
+    expect(button.className).toContain("hover:-translate-y-px");
+  });
 });

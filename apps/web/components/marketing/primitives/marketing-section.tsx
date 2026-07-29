@@ -15,7 +15,7 @@ interface MarketingSectionProps extends HTMLAttributes<HTMLElement> {
 
 const SPACING = {
   sm: "py-12 sm:py-16",
-  lg: "py-20 sm:py-28",
+  lg: "py-16 sm:py-24 lg:py-28",
 };
 
 /**

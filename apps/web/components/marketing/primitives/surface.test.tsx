@@ -19,4 +19,9 @@ describe("Surface", () => {
     render(<Surface bordered={false}>content</Surface>);
     expect(screen.getByText("content").className).not.toContain("border-border");
   });
+
+  it("adds soft elevation utilities when interactive", () => {
+    render(<Surface interactive>content</Surface>);
+    expect(screen.getByText("content").className).toContain("hover:shadow-edge");
+  });
 });

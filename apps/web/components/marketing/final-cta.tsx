@@ -1,5 +1,7 @@
-import Link from "next/link";
 import { Reveal } from "@/lib/motion/reveal";
+import { MarketingSection } from "./primitives/marketing-section";
+import { PrimaryButton } from "./primitives/primary-button";
+import { SecondaryButton } from "./primitives/secondary-button";
 
 interface FinalCtaProps {
   primaryCtaHref: string;
@@ -8,28 +10,18 @@ interface FinalCtaProps {
 
 export function FinalCta({ primaryCtaHref, primaryCtaLabel }: FinalCtaProps) {
   return (
-    <section className="mx-auto max-w-content px-5 py-20 sm:px-8">
+    <MarketingSection className="min-w-0 overflow-x-clip">
       <Reveal>
-        <div className="rounded-xl border border-border bg-surface p-10 text-center sm:p-14">
+        <div className="rounded-xl border border-border bg-surface p-6 text-center sm:p-10 md:p-14">
           <h2 className="mx-auto max-w-xl text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
             Let your agents move fast. Verify before you merge.
           </h2>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href={primaryCtaHref}
-              className="appearance-none rounded-md bg-accent px-5 py-3 text-sm font-semibold text-[#06090f]"
-            >
-              {primaryCtaLabel}
-            </Link>
-            <Link
-              href="#security"
-              className="appearance-none rounded-md border border-border px-5 py-3 text-sm font-medium text-ink"
-            >
-              Read the architecture
-            </Link>
+            <PrimaryButton href={primaryCtaHref}>{primaryCtaLabel}</PrimaryButton>
+            <SecondaryButton href="#security">Read the architecture</SecondaryButton>
           </div>
         </div>
       </Reveal>
-    </section>
+    </MarketingSection>
   );
 }

@@ -25,7 +25,7 @@ export function Reveal({ children, delay = 0, className, as = "div" }: RevealPro
   return (
     <MotionTag
       className={className}
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={VIEWPORT_ONCE}
       transition={{ duration: DURATION.slow, ease: EASE_OUT, delay }}

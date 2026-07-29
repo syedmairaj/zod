@@ -236,7 +236,7 @@ const FEATURES: Feature[] = [
 
 export function FeatureBento() {
   return (
-    <MarketingSection id="product">
+    <MarketingSection id="product" className="min-w-0 overflow-x-clip">
       <Reveal>
         <SectionHeader
           eyebrow="Product"
@@ -245,10 +245,10 @@ export function FeatureBento() {
         />
       </Reveal>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 grid min-w-0 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {FEATURES.map((feature, index) => (
-          <Reveal key={feature.title} delay={index * 0.04} className={cn("h-full", feature.span)}>
-            <Surface className="group relative isolate flex h-full flex-col overflow-hidden p-5">
+          <Reveal key={feature.title} delay={index * 0.04} className={cn("h-full min-w-0", feature.span)}>
+            <Surface className="group relative isolate flex h-full min-w-0 flex-col overflow-hidden p-5">
               <div
                 aria-hidden="true"
                 className={cn(

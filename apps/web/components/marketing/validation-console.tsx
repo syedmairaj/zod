@@ -464,10 +464,10 @@ export function ValidationConsole() {
             <AnimatePresence mode="wait">
               <motion.div
                 key={stageIndex}
-                initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+                initial={reducedMotion ? false : { opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
-                transition={{ duration: DURATION.base, ease: EASE_OUT }}
+                exit={reducedMotion ? undefined : { opacity: 0, y: -4 }}
+                transition={{ duration: DURATION.fast, ease: EASE_OUT }}
               >
                 <StageContent index={stageIndex} />
               </motion.div>

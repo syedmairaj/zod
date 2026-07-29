@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**Phase 1 — Milestone 1: sign-in, organizations, GitHub App install, connected repositories, verified webhooks, queued runs**, plus a **landing-page milestone** (public marketing homepage; not Milestone 2), followed by landing-page redesign **Phase 1 (Design Foundation)** through **Phase 8 (Pricing, Early Access, and FAQ)** per `PHASE_01`&ndash;`PHASE_08_*.md`. See `LANDING_PAGE_IMPLEMENTATION.md` for the original landing-page build. Stopped after Phase 8 per the brief's explicit "do not start Phase 9" instruction.
+**Phase 1 — Milestone 1: sign-in, organizations, GitHub App install, connected repositories, verified webhooks, queued runs**, plus a **landing-page milestone** (public marketing homepage; not Milestone 2), followed by landing-page redesign **Phase 1 (Design Foundation)** through **Phase 10 (Production Polish)** — the final marketing phase. See `LANDING_PAGE_IMPLEMENTATION.md` for the original landing-page build. Stopped after Phase 10 per the brief's explicit "do not begin backend implementation" instruction.
 
 ## Completed
 
@@ -63,8 +63,18 @@
   - Early access: ideal-user + benefits lists; explicit "Honest product state" box (what ships today vs what does not); primary CTA = existing `primaryCtaHref` (`/sign-in` or `/dashboard`); secondary CTA = `#pricing` only (no waitlist/contact route exists — no dead button).
   - Pricing: **Pricing coming soon**; Developer / Team / Business all labeled **Planned**; no dollar amounts (none approved in project docs); disclaimer "Plans, limits, and availability may change during early access."; no Stripe/checkout.
   - FAQ: 10-item client accordion with native `<button aria-expanded aria-controls>` + `role="region"` panels; honest answers including production-readiness = not ready; sandbox execution planned; no absolute secret guarantees.
-
-## Not started
+- **Landing-page redesign Phase 9 (Positioning + restrained polish)**: added a post-hero positioning section and light micro-interaction polish. **No Lenis.** No redesign of nav, hero copy, validation demo logic, problem, pipeline, bento, evidence, workflow, security, pricing, FAQ, backend, auth, or GitHub integration.
+  - New `WhyAnotherTool` section (`#why`) immediately after `Hero`: headline "Why another AI tool?"; supporting copy contrasting AI coding assistants generating code vs Zod.ai independently verifying production readiness; split Traditional (**Ungated**) vs Zod.ai (**Evidence-gated**) SVG flow diagrams with path-draw connectors under motion and final-state paths under `prefers-reduced-motion`; subtle amber warning dots on ungated steps; no logos, screenshots, or fake UI.
+  - Primitive polish only: `PrimaryButton`/`SecondaryButton` tactile `active:scale-[0.98]`, fine-pointer hover lift (removed hover scale); opt-in `Surface interactive` border/elevation; `CodeDiff` one-shot add-line highlight wash (final tint immediately when reduced motion); `MarketingSection` lg spacing refined to `py-16 sm:py-24 lg:py-28`. Evidence tab `layoutId` underline and pipeline connector reveal left as already shipped in Phases 4/6.
+  - A11y: reduced-motion final states verified via Puppeteer media emulation; no overflow at 360/390 (`scrollWidth === clientWidth`); focus rings unchanged on buttons; no hover-only critical content.
+- **Landing-page redesign Phase 10 (Production polish — final marketing phase)**: no new sections and no redesign. Measurable a11y/SEO/perf/responsive/motion/consistency cleanup only. Backend not started.
+  - **Perf / hydration:** removed unnecessary `"use client"` from `security-section` (Reveal remains a client island); homepage first-load JS **146 kB** (was 148 kB); removed unused Tailwind `fade-up`/`scan-line` keyframes.
+  - **A11y:** `SkipToContent` → `#main`; sticky header `env(safe-area-inset-top)`; intentional dark product via `viewport.colorScheme`/`themeColor`, `color-scheme: dark`, and `html.dark` (no invented light theme). Decorative SVGs stay `aria-hidden`.
+  - **SEO:** `applicationName`, canonical, OG, Twitter `summary_large_image` (wired to existing `opengraph-image`), robots/sitemap unchanged; JSON-LD `SoftwareApplication` with documented facts only (no invented company data).
+  - **Responsive:** fixed real **320px** page overflow from feature-bento grid `min-width: auto` (`min-w-0` + section `overflow-x-clip`); container padding `px-4 sm:px-5 md:px-8`; verified `scrollWidth === clientWidth` at 320/360/390/768/1024/1280/1536 (inner tab/table scrollers remain contained).
+  - **Motion calm:** hero copy uses one Reveal (not six staggered); console stage transition shortened (`DURATION.fast`, y:4); Reveal lift 16→12px.
+  - **Consistency:** Hero + Final CTA on `PrimaryButton`/`SecondaryButton` + `MarketingSection`; no hover-scale leftovers.
+  - Kept Phase 1 `GlowBorder` primitive (design-system surface; unused in page bodies by design).
 
 - Repository profiling / snapshotting
 - Queue / job orchestration
@@ -197,6 +207,46 @@ apps/web/components/marketing/faq.test.tsx                   rewritten: 5 tests
 
 Not modified: Phase 1 tokens/primitives, nav, hero, Phase 3–7 sections, auth/webhook/dashboard/db code. No billing APIs added.
 
+## Files / modules added (landing-page redesign Phase 9: Positioning and polish)
+
+```
+apps/web/components/marketing/why-another-tool.tsx            new: post-hero comparison
+apps/web/components/marketing/why-another-tool.test.tsx       new: 6 tests
+apps/web/components/marketing/code-diff.tsx                   client: one-shot add-line highlight
+apps/web/components/marketing/code-diff.test.tsx              new: 2 tests
+apps/web/components/marketing/primitives/primary-button.tsx   tactile press + fine-pointer hover
+apps/web/components/marketing/primitives/secondary-button.tsx tactile press + border hover
+apps/web/components/marketing/primitives/surface.tsx          optional interactive lift
+apps/web/components/marketing/primitives/marketing-section.tsx spacing refinement
+apps/web/app/(marketing)/page.tsx                            inserts WhyAnotherTool after Hero
+```
+
+Not modified: nav, hero copy, validation console logic, problem/pipeline/bento/evidence/workflow/security/pricing/FAQ content, auth/webhook/dashboard/db. No Lenis.
+
+## Files / modules added (landing-page redesign Phase 10: Production polish)
+
+```
+apps/web/app/layout.tsx                                  metadata + viewport + JSON-LD
+apps/web/app/(marketing)/layout.tsx                      SkipToContent shell
+apps/web/app/globals.css                                 color-scheme: dark
+apps/web/components/marketing/skip-to-content.tsx        new skip link
+apps/web/components/marketing/skip-to-content.test.tsx   new: 1 test
+apps/web/components/marketing/hero.tsx                   shared buttons; calmer Reveal
+apps/web/components/marketing/final-cta.tsx              MarketingSection + shared buttons
+apps/web/components/marketing/feature-bento.tsx          320px min-w-0 overflow fix
+apps/web/components/marketing/security-section.tsx       drop unnecessary use client
+apps/web/components/marketing/site-header.tsx            safe-area sticky padding
+apps/web/components/marketing/problem-section.tsx        overflow-x-clip
+apps/web/components/marketing/validation-pipeline.tsx    overflow-x-clip
+apps/web/components/marketing/workflow-integrations.tsx  overflow-x-clip
+apps/web/components/marketing/validation-console.tsx     calmer stage transition
+apps/web/components/marketing/primitives/marketing-container.tsx  320px padding scale
+apps/web/lib/motion/reveal.tsx                           subtler lift
+apps/web/tailwind.config.ts                              remove unused keyframes
+```
+
+No new marketing sections. No backend modules.
+
 ## Files / modules added (landing page)
 
 See `LANDING_PAGE_IMPLEMENTATION.md` section 8 for the full file list
@@ -256,6 +306,8 @@ tests/integration/
 - `apps/web` (Phase 6, `evidence-tabs.test.tsx` 9 tests + `workflow-integrations.test.tsx` 5 tests): three tabs with correct labels/order; default aria-selected; file + line range + policy + verifier + remediation on each scenario (via click); Arrow Left/Right and Home/End; `aria-controls`/`aria-labelledby` wiring; no hover-only content; workflow headline + agent-agnostic copy; GitLab and MCP marked Planned; no partnership/endorsement implication language; five-step flow labels present. Full marketing suite after shared `FindingCard`/`CodeDiff` changes: 18 files, 92 tests, all passing.
 - `apps/web` (Phase 7, `security-section.test.tsx`, 9 tests): headline + supporting copy + `#security`; five boundary stages; credential-stop copy; all ten principles present with text statuses; sandbox/egress Planned; audit-ledger distinction; Docker-not-sufficient + stronger-isolation disclaimer; no enterprise-grade/bank-grade/absolute-guarantee wording (banned terms only inside explicit disclaimer); reduced-motion visibility. Full marketing suite: 19 files, 101 tests.
 - `apps/web` (Phase 8): `status-early-access.test.tsx` (4), `pricing-preview.test.tsx` (4), `faq.test.tsx` (5) — CTAs to real destinations; all plans Planned with no `$`; pricing disclaimer; FAQ ARIA expand/collapse + keyboard Enter; production-readiness honesty; no fake urgency/social proof. Full marketing suite: 21 files, 112 tests.
+- `apps/web` (Phase 9): `why-another-tool.test.tsx` (6), `code-diff.test.tsx` (2), plus button/surface micro-interaction assertions — positioning headline/copy; Traditional vs Zod workflow steps; Ungated/Evidence-gated labels; `#why` anchor; CodeDiff overflow containment; tactile press (no hover scale). Full marketing suite: **23 files, 123 tests**, all passing. `npm run typecheck` / `npm run lint` clean. `rm -rf .next && npm run build` clean. Puppeteer screenshots: desktop Why section (`phase9-desktop-why.png`), mobile 390 (`phase9-mobile-why.png`), reduced-motion final SVG paths (`phase9-reduced-motion-why.png`); 360/390 `scrollWidth === clientWidth`.
+- `apps/web` (Phase 10): `skip-to-content.test.tsx` (1) + full marketing suite **24 files / 124 tests**. `npm run typecheck` / `npm run lint` clean. Clean production build with **no** themeColor/colorScheme metadata warnings (moved to `viewport` export). Puppeteer: desktop / tablet 768 / mobile 390 / reduced-motion `#why` / dark-mode (`color-scheme: dark`); overflow matrix 320–1536 all `scrollWidth === clientWidth`; console/hydration error list empty; SEO smoke confirms skip link, single H1, `#main`, JSON-LD `SoftwareApplication`, title, canonical.
 - Manual verification actually executed, Phase 8: `rm -rf .next && npm run build`; `next start`; screenshots at 1440px (early access, pricing, FAQ with keyboard-opened item + focus ring) and 390px; 360/390 `scrollWidth === clientWidth`.
 - Manual verification actually executed, Phase 7: `rm -rf .next && npm run build`; `next start`; Puppeteer screenshots at 1440px and 390px; reduced-motion emulation confirmed GitHub/credential/principle content present immediately; 360/390 `scrollWidth === clientWidth`.
 - Manual verification actually executed, Phase 6: `rm -rf .next && npm run build`; `next start` on an isolated port; Puppeteer screenshots at 1440px (evidence + workflow) and 390px (both); keyboard ArrowRight + `getComputedStyle` confirmed focus ring (`box-shadow` focus-ring token) on the active tab; 360px and 390px checks confirmed `document.documentElement.scrollWidth === clientWidth` (Known issue #17 closed for this surface).

@@ -80,19 +80,6 @@ const config: Config = {
       opacity: {
         grid: "0.05",
       },
-      keyframes: {
-        "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(10px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        "scan-line": {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(100%)" },
-        },
-      },
-      animation: {
-        "fade-up": "fade-up 0.5s ease-out both",
-      },
       boxShadow: {
         edge: "0 0 0 1px rgba(255,255,255,0.04), 0 8px 30px -12px rgba(0,0,0,0.6)",
       },

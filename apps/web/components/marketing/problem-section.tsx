@@ -66,7 +66,7 @@ const PROBLEMS: ProblemCard[] = [
 
 export function ProblemSection() {
   return (
-    <MarketingSection id="problem">
+    <MarketingSection id="problem" className="min-w-0 overflow-x-clip">
       <Reveal>
         <SectionHeader eyebrow="Why Zod.ai" title="AI writes code faster than teams can verify it." />
       </Reveal>

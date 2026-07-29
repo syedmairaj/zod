@@ -1,5 +1,3 @@
-"use client";
-
 import { Reveal } from "@/lib/motion/reveal";
 import { cn } from "@/lib/cn";
 import { MarketingSection } from "./primitives/marketing-section";

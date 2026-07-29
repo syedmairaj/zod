@@ -24,7 +24,7 @@ const FLOW_STEPS = [
 
 export function WorkflowIntegrations() {
   return (
-    <MarketingSection id="workflow" tinted>
+    <MarketingSection id="workflow" className="min-w-0 overflow-x-clip" tinted>
       <Reveal>
         <SectionHeader
           eyebrow="Works with your workflow"

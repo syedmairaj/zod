@@ -35,7 +35,7 @@ export function SiteHeader({ primaryCtaHref, primaryCtaLabel }: SiteHeaderProps)
   return (
     <header
       className={cn(
-        "sticky top-0 z-40 transition-colors duration-300",
+        "sticky top-0 z-40 pt-[env(safe-area-inset-top)] transition-colors duration-300",
         scrolled ? "border-b border-border bg-bg/85 backdrop-blur-md" : "border-b border-transparent bg-transparent",
       )}
     >

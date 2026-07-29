@@ -1,16 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
+const title = "Zod.ai \u2014 Reliability for AI-Generated Code";
+const description =
+  "Validate agent-written code against tests, architecture, security policies, contracts, and independent AI review before merge.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: "Zod.ai",
   title: {
-    default: "Zod.ai \u2014 Reliability for AI-Generated Code",
+    default: title,
     template: "%s \u2014 Zod.ai",
   },
-  description:
-    "Validate agent-written code against tests, architecture, security policies, contracts, and independent AI review before merge.",
+  description,
   alternates: {
     canonical: "/",
   },
@@ -18,15 +22,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "Zod.ai",
-    title: "Zod.ai \u2014 Reliability for AI-Generated Code",
-    description:
-      "Validate agent-written code against tests, architecture, security policies, contracts, and independent AI review before merge.",
+    title,
+    description,
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Zod.ai \u2014 Reliability for AI-Generated Code",
-    description:
-      "Validate agent-written code against tests, architecture, security policies, contracts, and independent AI review before merge.",
+    title,
+    description,
   },
   robots: {
     index: true,
@@ -34,9 +37,35 @@ export const metadata: Metadata = {
   },
 };
 
+/** Product UI is intentionally dark graphite; match browser chrome. */
+export const viewport: Viewport = {
+  themeColor: "#0a0c0f",
+  colorScheme: "dark",
+};
+
+/**
+ * Structured data limited to facts already stated in product docs /
+ * IMPLEMENTATION_STATUS — no invented founding date, address, or ratings.
+ */
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Zod.ai",
+  applicationCategory: "DeveloperApplication",
+  operatingSystem: "Web",
+  description,
+  url: siteUrl,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );
