@@ -61,8 +61,23 @@ export interface GithubInstallationRow {
   organization_id: string;
   installation_id: number;
   account_login: string;
+  /**
+   * GitHub account numeric id. Stored as bigint in Postgres; exposed as a
+   * string so 64-bit values are never coerced unsafely in JS. Null only for
+   * legacy rows until refreshed.
+   */
+  account_id: string | null;
+  /** Exact permissions object from GitHub, or null for legacy rows. */
+  permissions_json: Record<string, string> | null;
+  /** Authenticated Zod.ai user who completed the install link. Null for legacy. */
+  installed_by_user_id: string | null;
+  /**
+   * DEPRECATED for GitHub installation access tokens (ephemeral / in-memory only).
+   * Retained for schema compatibility; onboarding must never write tokens here.
+   */
   encrypted_credentials_reference: Record<string, unknown> | null;
   status: GithubInstallationStatus;
+  revoked_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,6 +92,7 @@ export interface RepositoryRow {
   default_branch: string;
   is_private: boolean;
   status: RepositoryStatus;
+  disconnected_at: string | null;
   created_at: string;
   updated_at: string;
 }

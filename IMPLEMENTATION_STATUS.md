@@ -2,16 +2,30 @@
 
 ## Current phase
 
-**Phase 1 — Milestone 1: sign-in, organizations, GitHub App install, connected repositories, verified webhooks, queued runs**, plus a **landing-page milestone** (public marketing homepage; not Milestone 2), followed by landing-page redesign **Phase 1 (Design Foundation)** through **Phase 10 (Production Polish)** — the final marketing phase. See `LANDING_PAGE_IMPLEMENTATION.md` for the original landing-page build. Stopped after Phase 10 per the brief's explicit "do not begin backend implementation" instruction.
+**Authentication experience (post Milestone 1):** GitHub OAuth + Google OAuth +
+email magic-link fallback, intercepted sign-in modal, standalone `/sign-in`,
+beta `/terms` + `/privacy`. Marketing Phases 1–10 and MVP Milestone 1 (Gate 1)
+remain complete. **Do not begin Milestone 2** in this pass.
 
 ## Completed
 
+- **Authentication UX:** Shared `AuthPanel` + accessible `AuthDialog`; root
+  parallel route `app/@auth/(.)sign-in` for marketing soft-nav modal; hard
+  `/sign-in` standalone page; active session redirects to `/post-auth`.
+  Providers: GitHub OAuth (human login scopes only), Google OAuth, magic link
+  with generic success copy, UI resend cooldown, and rate-limit handling.
+  Callback uses validated `next` via `resolveSafeRedirect` (default
+  `/post-auth`). Middleware no longer forwards arbitrary `/?code=` to the
+  callback. Public env validation via `getPublicEnv()`. Structured auth events
+  in `lib/auth-events.ts`. Beta legal pages `/terms` and `/privacy`. Test
+  guide: `docs/mvp/testing/AUTHENTICATION_AND_SIGNIN_TEST_GUIDE.md`.
 - Product positioning, MVP scope, architecture, AI validation strategy, security/sandbox principles, initial data model, and design direction documented (Phase 0).
 - TypeScript npm-workspaces monorepo (`apps/web`, `packages/shared-types`, `packages/db`, `packages/github`).
 - Next.js App Router application with a dark, evidence-oriented UI consistent with `DESIGN_SYSTEM.md`.
 - Authentication via Supabase Auth (email magic link/OTP), session refresh middleware.
 - Organization + membership model (`owner`/`admin`/`developer`/`reviewer`/`billing`/`read_only` roles), org creation flow, application-level `requireOrganizationAccess` authorization choke point used by every tenant-scoped page/action/route.
 - GitHub App installation flow: signed, expiring `state` token; install-callback verification; installation linking; repository listing and selection UI.
+- **Milestone 1 hardening (Gate 1):** migration `0003_github_onboarding_hardening.sql` adds `account_id`, `permissions_json`, `installed_by_user_id`, `revoked_at` on `github_installations` and `disconnected_at` on `repositories`; immutability triggers; `linkOrRefreshInstallation` with same-org idempotent refresh and cross-org conflict; refresh/deselect/disconnect actions; permission summary UI; structured ops events; installation tokens remain ephemeral (never written to `encrypted_credentials_reference`). Manual test guide: `docs/mvp/testing/MILESTONE_01_GITHUB_ONBOARDING_TEST_GUIDE.md`.
 - GitHub webhook ingress (`/api/github/webhook`): HMAC-SHA256 signature verification over the raw body, delivery-id idempotency claim (unique constraint), `pull_request` (opened/synchronize/reopened) and `installation` (created/deleted/suspend/unsuspend) event handling.
 - Pull request revision persistence (one row per `head_sha`) and validation-run persistence (`status = 'queued'` on webhook receipt; prior revision's run marked `superseded`).
 - Dashboard: repositories list, per-repository validation-run history, org-wide recent runs, audit log page.
@@ -333,7 +347,7 @@ Not executed (infrastructure not available in this environment): a live Supabase
 2. **`packages/db/src/database.types.ts` is hand-maintained**, not generated from a linked Supabase project. It must be kept in sync with migrations by hand until a real project exists and CI can regenerate it.
 3. **`npm audit` reports vulnerabilities in the `next`/`postcss` dependency chain** even at the latest Next.js 14.2.x patch (14.2.35). Some advisories are only fixed in Next 15/16, which is a major-version migration (React 19, breaking changes) intentionally out of scope for this milestone. Tracked as a risk to revisit; recommend adding Dependabot/`npm audit` to CI.
 4. **`installation.created` webhook races the install callback.** If GitHub's `installation` webhook arrives before our own `/api/github/install/callback` finishes linking the installation to an organization, the webhook handler correctly no-ops (there's nothing to update yet) rather than guessing an organization -- the callback, which always fires for a user-initiated install, is the source of truth. If a user installs the App directly from GitHub without going through our "Install GitHub App" button (e.g. from the GitHub Marketplace/App page), no organization link is ever created and the installation is invisible to Zod.ai until they connect it through the app.
-5. **Repository disconnect / uninstall UI is not implemented.** The schema and repository functions support `status = 'disconnected'`/`'deleted'`, but no UI/action sets them yet in Milestone 1.
+5. **Repository disconnect / uninstall UI is implemented for Milestone 1** (deselect + disconnect installation + refresh discovery). Live GitHub uninstall E2E still depends on a provisioned App.
 6. **No email deliverability configuration documented** beyond enabling Supabase's default magic-link email; production sending limits/custom SMTP are a pre-launch task, not addressed here.
 7. **No rate limiting on the webhook or install-callback endpoints.** Signature verification prevents forged payloads, but there's no throttling against a compromised/misbehaving installation or replayed valid deliveries at volume.
 8. **Landing page: Lighthouse/Core Web Vitals were not measured** (no headless Chrome + Lighthouse CLI in this environment) and multi-breakpoint (360–1440px) screenshots were not captured (the in-IDE browser tool's viewport emulation didn't resize the render surface here). See `LANDING_PAGE_IMPLEMENTATION.md` sections 5 and 10 for what was verified instead.

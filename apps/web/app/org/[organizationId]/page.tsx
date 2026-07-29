@@ -5,7 +5,13 @@ import { requireOrgAccess } from "@/lib/auth";
 import { getDbPool } from "@/lib/db";
 import { StatusBadge } from "@/components/status-badge";
 
-export default async function OrganizationOverviewPage({ params }: { params: { organizationId: string } }) {
+export default async function OrganizationOverviewPage({
+  params,
+  searchParams,
+}: {
+  params: { organizationId: string };
+  searchParams?: { error?: string; notice?: string };
+}) {
   const auth = await requireOrgAccess(params.organizationId);
   const pool = getDbPool();
 
@@ -20,6 +26,17 @@ export default async function OrganizationOverviewPage({ params }: { params: { o
 
   return (
     <div>
+      {searchParams?.error === "installation_org_conflict" ? (
+        <p className="error-banner">
+          That GitHub installation is already linked to another Zod.ai organization. No changes were made.
+        </p>
+      ) : null}
+      {searchParams?.error === "installation_failed" ? (
+        <p className="error-banner">GitHub installation could not be completed. Try again or check App configuration.</p>
+      ) : null}
+      {searchParams?.notice === "installation_disconnected" ? (
+        <p className="muted">GitHub installation disconnected for this organization.</p>
+      ) : null}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h1 style={{ fontSize: 22, margin: 0 }}>Repositories</h1>
         {canManageRepositories ? (

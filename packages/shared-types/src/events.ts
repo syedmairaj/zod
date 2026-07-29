@@ -25,14 +25,20 @@ export const AUDIT_ACTIONS = [
   "user.signed_in",
   "organization.created",
   "organization_member.added",
+  "github_installation.started",
   "github_installation.connected",
+  "github_installation.refreshed",
   "github_installation.callback_rejected",
+  "github_installation.conflict_rejected",
+  "github_installation.revoked",
   "repository.connected",
   "repository.disconnected",
+  "repository.deselected",
   "webhook.received",
   "webhook.rejected",
   "validation_run.queued",
   "validation_run.superseded",
+  "github_api.failed",
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

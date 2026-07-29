@@ -38,7 +38,5 @@ export function getServerEnv(): ServerEnv {
   return cachedEnv;
 }
 
-/** Normalizes a PEM private key that may have literal `\n` sequences from a .env file. */
-export function normalizePemPrivateKey(raw: string): string {
-  return raw.includes("\\n") ? raw.replace(/\\n/g, "\n") : raw;
-}
+export { normalizePemPrivateKey } from "./pem";
+

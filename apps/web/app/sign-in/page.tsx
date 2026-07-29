@@ -1,22 +1,28 @@
-import Link from "next/link";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { AuthPanel } from "@/components/auth/auth-panel";
 import { getCurrentUser } from "@/lib/auth";
-import { SignInForm } from "./sign-in-form";
 
-export default async function SignInPage() {
+export const metadata: Metadata = {
+  title: "Sign in",
+  robots: { index: false, follow: false },
+};
+
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams?: { error?: string; next?: string };
+}) {
   const user = await getCurrentUser();
   if (user) {
-    redirect("/dashboard");
+    redirect("/post-auth");
   }
 
   return (
-    <main className="page">
-      <Link href="/" className="brand">
-        Zod.ai
-      </Link>
-      <h1 style={{ fontSize: 24 }}>Sign in</h1>
-      <p className="muted">We&apos;ll email you a one-time sign-in link. No password required.</p>
-      <SignInForm />
+    <main className="auth-standalone">
+      <div className="auth-standalone-card">
+        <AuthPanel errorCode={searchParams?.error ?? null} nextPath={searchParams?.next ?? null} />
+      </div>
     </main>
   );
 }

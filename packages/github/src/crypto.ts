@@ -31,10 +31,12 @@ export function loadEncryptionKey(base64Key: string | undefined): Buffer {
 }
 
 /**
- * Encrypts a short-lived secret (e.g. a cached GitHub installation access
- * token) for storage in `github_installations.encrypted_credentials_reference`.
- * Never used for the GitHub App private key itself, which stays in server
- * environment configuration only.
+ * Encrypts a short-lived secret for optional encrypted storage.
+ *
+ * DEPRECATED for GitHub installation access tokens: those must remain
+ * ephemeral and in-memory only (never written to
+ * `github_installations.encrypted_credentials_reference`). This helper is
+ * retained for unrelated future credential envelopes only.
  */
 export function encryptSecret(plaintext: string, key: Buffer): EncryptedEnvelope {
   const iv = randomBytes(IV_LENGTH_BYTES);

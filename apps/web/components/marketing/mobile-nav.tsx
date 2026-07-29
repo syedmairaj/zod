@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { ZodBrandLink } from "@/components/brand/zod-brand-link";
 import { cn } from "@/lib/cn";
 import { PrimaryButton } from "./primitives/primary-button";
 import { SecondaryButton } from "./primitives/secondary-button";
@@ -57,7 +58,7 @@ export function MobileNav({ links, ctaHref, ctaLabel, signInHref, open, onClose 
       )}
     >
       <div className="flex items-center justify-between border-b border-border px-5 py-4">
-        <span className="font-semibold tracking-tight">Zod.ai</span>
+        <ZodBrandLink className="text-body" onClick={onClose} />
         <button
           type="button"
           onClick={onClose}

@@ -46,9 +46,41 @@ npm install
    for local integration tests against plain Postgres, and a real Supabase
    project already has a real `auth` schema managed by the platform.
 
-5. In Supabase Auth settings, enable **Email** provider with magic
-   link/OTP sign-in (this is the default), and add
-   `${NEXT_PUBLIC_APP_URL}/auth/callback` to the redirect URL allow-list.
+5. In Supabase Auth settings, enable **Email** (magic link/OTP), **GitHub**, and
+   **Google** providers, and configure redirects carefully:
+
+   - **Site URL**: `${NEXT_PUBLIC_APP_URL}` (e.g. `http://localhost:3000`)
+   - **Redirect URLs** allow-list **must** include:
+     `${NEXT_PUBLIC_APP_URL}/auth/callback`
+     (e.g. `http://localhost:3000/auth/callback`)
+
+   If `/auth/callback` is missing from Redirect URLs, Supabase may fall back to
+   the Site URL and land on `/?code=...`. The app middleware does **not** treat
+   arbitrary root-level `code` query parameters as authentication — fix the
+   Redirect URL allow-list instead.
+
+   Open magic links in the **same browser** that requested the email (PKCE
+   stores a verifier cookie there). A different browser/device will fail with
+   `auth_failed`.
+
+   **Custom SMTP** is required before public magic-link launch (Supabase’s
+   default email path is not suitable for production deliverability).
+
+   **GitHub OAuth (human login)** — create a separate GitHub **OAuth App**
+   (Developer Settings → OAuth Apps). Do **not** reuse the repository GitHub
+   App credentials. Authorization callback URL must be the exact Supabase
+   provider callback shown in Authentication → Providers → GitHub. Request
+   only identity scopes (no repository access). Paste Client ID/Secret into
+   Supabase.
+
+   **Google OAuth** — create a Google Cloud OAuth client; use Supabase’s
+   Google provider callback URL; scopes `openid` / `email` / `profile`. Paste
+   Client ID/Secret into Supabase.
+
+   Full checklist: `docs/mvp/testing/AUTHENTICATION_AND_SIGNIN_TEST_GUIDE.md`.
+
+   Legal beta pages: `/terms`, `/privacy` (professional legal review required
+   before public paid launch).
 
 6. After any future migration change, regenerate types:
 

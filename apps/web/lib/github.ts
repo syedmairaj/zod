@@ -1,6 +1,8 @@
 import "server-only";
 import { createGithubAppClient, type GithubAppClient } from "@zod-ai/github";
-import { getServerEnv, normalizePemPrivateKey } from "./env.server";
+import { getServerEnv } from "./env.server";
+import { normalizePemPrivateKey } from "./pem";
+
 
 let cachedClient: GithubAppClient | null = null;
 

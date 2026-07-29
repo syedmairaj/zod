@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ZodBrandLink } from "@/components/brand/zod-brand-link";
 import { cn } from "@/lib/cn";
 import { MobileNav } from "./mobile-nav";
 import { MarketingContainer } from "./primitives/marketing-container";
@@ -40,9 +41,7 @@ export function SiteHeader({ primaryCtaHref, primaryCtaLabel }: SiteHeaderProps)
       )}
     >
       <MarketingContainer className="flex items-center justify-between py-4">
-        <Link href="/" className="text-body font-semibold tracking-tight text-ink">
-          Zod.ai
-        </Link>
+        <ZodBrandLink className="text-body" />
 
         <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
           {NAV_LINKS.map((link) => (

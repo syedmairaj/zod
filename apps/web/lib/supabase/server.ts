@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getPublicEnv } from "@/lib/env.public";
 
 /**
  * Supabase client for use in Server Components, Server Actions, and Route
@@ -10,8 +11,9 @@ import { cookies } from "next/headers";
  */
 export function createSupabaseServerClient() {
   const cookieStore = cookies();
+  const env = getPublicEnv();
 
-  return createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+  return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;

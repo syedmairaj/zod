@@ -96,7 +96,7 @@ async function applySchema(config: TestDbConfig, socketDir: string, port: number
   try {
     await client.query(readFileSync(SHIM_SQL_PATH, "utf8"));
 
-    const migrationFiles = ["0001_init.sql", "0002_rls.sql"];
+    const migrationFiles = ["0001_init.sql", "0002_rls.sql", "0003_github_onboarding_hardening.sql"];
     for (const file of migrationFiles) {
       const filePath = path.join(MIGRATIONS_DIR, file);
       if (!existsSync(filePath)) {

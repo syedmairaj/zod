@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { organizationsRepo } from "@zod-ai/db";
+import { ZodBrandLink } from "@/components/brand/zod-brand-link";
 import { requireOrgAccess } from "@/lib/auth";
 import { getDbPool } from "@/lib/db";
 
@@ -16,9 +17,7 @@ export default async function OrgLayout({
   return (
     <>
       <div className="topbar">
-        <Link href="/" className="brand">
-          Zod.ai
-        </Link>
+        <ZodBrandLink className="brand" />
         <nav style={{ display: "flex", gap: 20, alignItems: "center" }}>
           <span className="muted" style={{ fontSize: 14 }}>
             {org.name}

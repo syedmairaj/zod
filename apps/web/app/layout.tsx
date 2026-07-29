@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
@@ -57,7 +58,13 @@ const jsonLd = {
   url: siteUrl,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+  auth,
+}: {
+  children: ReactNode;
+  auth: ReactNode;
+}) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
       <head>
@@ -66,7 +73,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {auth}
+      </body>
     </html>
   );
 }
