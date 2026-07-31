@@ -114,7 +114,11 @@ export default async function OrganizationOverviewPage({
                     </Link>
                   </td>
                   <td>
-                    #{run.provider_pr_number} {run.pr_title}
+                    {run.provider_pr_number != null
+                      ? `#${run.provider_pr_number} ${run.pr_title ?? ""}`.trim()
+                      : run.head_sha
+                        ? `push ${run.head_sha.slice(0, 7)}`
+                        : "—"}
                   </td>
                   <td className="muted">{run.trigger}</td>
                   <td>

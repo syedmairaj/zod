@@ -29,16 +29,21 @@ npm install
    Put it in `DATABASE_URL`.
 3. Go to Project Settings -> API and copy the **Project URL** and **anon
    public key** into `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
-4. Apply the migrations in order against your project (via the SQL editor,
-   `psql`, or the Supabase CLI):
+4. Apply the migrations in order against your project (via the SQL editor or
+   `psql`). **Canonical SQL lives only in** `packages/db/migrations/` (do not
+   maintain a second copy under a nested `supabase/migrations` tree):
    - `packages/db/migrations/0001_init.sql`
    - `packages/db/migrations/0002_rls.sql`
+   - `packages/db/migrations/0003_github_onboarding_hardening.sql`
+   - `packages/db/migrations/0004_webhook_ingestion_queue.sql`
 
    Example with `psql`:
 
    ```bash
    psql "$DATABASE_URL" -f packages/db/migrations/0001_init.sql
    psql "$DATABASE_URL" -f packages/db/migrations/0002_rls.sql
+   psql "$DATABASE_URL" -f packages/db/migrations/0003_github_onboarding_hardening.sql
+   psql "$DATABASE_URL" -f packages/db/migrations/0004_webhook_ingestion_queue.sql
    ```
 
    Do **not** apply `tests/integration/setup/supabase-shim.sql` to a real

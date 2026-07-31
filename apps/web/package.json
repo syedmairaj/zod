@@ -16,6 +16,8 @@
     "@supabase/supabase-js": "^2.45.4",
     "@zod-ai/db": "*",
     "@zod-ai/github": "*",
+    "@zod-ai/queue": "*",
+    "@zod-ai/shared": "*",
     "@zod-ai/shared-types": "*",
     "motion": "^11.15.0",
     "next": "14.2.35",

@@ -21,9 +21,10 @@ Classify the repository's current capabilities before and during MVP backend imp
 | GitHub App foundation | Implemented | `packages/github`, install start/callback, `0001`+`0003` | Live App E2E | Key handling |
 | Repository authorization | Implemented | Connect UI, server-side listing via installation token, select/deselect/refresh | Live GitHub matrix | Stale grants until refresh |
 | Installation org immutability | Implemented | App conflict + DB trigger in `0003` | — | — |
-| Webhook verification | Implemented (Milestone 2 surface) | `api/github/webhook`, HMAC raw body | Out of M1 scope | Leave unchanged in M1 |
-| Webhook idempotency | Implemented (Milestone 2 surface) | `webhook_deliveries` unique delivery_id | Out of M1 scope | — |
-| Validation queue | Partial | `validation_runs` queued on webhook | Worker/lease | Not M1 |
+| Webhook verification | Implemented | Thin `api/github/webhook` → `processGithubWebhook`; HMAC raw body in `packages/github/signature` | Live GitHub matrix | Tampered body must keep failing closed |
+| Webhook idempotency | Implemented | `webhook_deliveries` unique delivery_id claim | — | Race covered by unique constraint |
+| Event parsing / SHA extract | Implemented | `packages/github/event-parser` for ping/PR/push/installation/installation_repositories | Broader event types later | Invalid handled events throw → 500 (fail closed) |
+| Validation queue enqueue | Implemented (no worker) | `packages/queue` inserts `validation_runs` (`queued`) with `commit_sha` + `webhook_delivery_id` | Milestone 3 leases/workers | Do not treat enqueue as execution |
 | Worker lifecycle | Missing | — | Milestone 3+ | — |
 | Exact SHA checkout | Missing | — | Milestone 4 | — |
 | Sandbox execution | Missing | — | Milestone 4 | — |

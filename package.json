@@ -19,6 +19,8 @@
   "devDependencies": {
     "@zod-ai/db": "*",
     "@zod-ai/github": "*",
+    "@zod-ai/queue": "*",
+    "@zod-ai/shared": "*",
     "@zod-ai/shared-types": "*",
     "pg": "^8.13.1",
     "typescript": "5.6.3",

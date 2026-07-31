@@ -34,6 +34,7 @@ export const VALIDATION_RUN_TRIGGERS = [
   "pull_request_opened",
   "pull_request_synchronize",
   "pull_request_reopened",
+  "push",
   "manual",
 ] as const;
 export type ValidationRunTrigger = (typeof VALIDATION_RUN_TRIGGERS)[number];

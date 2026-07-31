@@ -12,5 +12,8 @@ coverage/
 .turbo/
 .vercel/
 .tmp/
+# Supabase CLI local state (repo-root or nested project dirs)
 supabase/.branches/
 supabase/.temp/
+**/supabase/.branches/
+**/supabase/.temp/

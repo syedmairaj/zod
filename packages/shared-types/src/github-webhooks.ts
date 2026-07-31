@@ -2,10 +2,9 @@ import { z } from "zod";
 
 /**
  * Minimal, deliberately narrow schemas for the GitHub webhook payload shapes
- * Milestone 1 actually consumes. We do not model the full GitHub webhook
- * schema; unknown/extra fields are ignored (not rejected) but every field we
- * rely on downstream is validated before use, per AGENTS.md ("Validate all
- * external input").
+ * Milestone 2 consumes. We do not model the full GitHub webhook schema;
+ * unknown/extra fields are ignored (not rejected) but every field we rely on
+ * downstream is validated before use, per AGENTS.md ("Validate all external input").
  */
 
 export const GithubRepositorySchema = z.object({
@@ -67,5 +66,53 @@ export const GithubPingPayloadSchema = z.object({
   hook_id: z.number().optional(),
 });
 
+export const GithubPushPayloadSchema = z.object({
+  ref: z.string(),
+  after: z.string(),
+  deleted: z.boolean().optional(),
+  repository: GithubRepositorySchema,
+  installation: z.object({ id: z.number() }).optional(),
+  sender: z.object({ login: z.string() }).optional(),
+});
+
+export const GithubInstallationRepositoriesPayloadSchema = z.object({
+  action: z.enum(["added", "removed"]),
+  installation: z.object({
+    id: z.number(),
+    account: z
+      .object({
+        login: z.string(),
+        id: z.number(),
+      })
+      .optional(),
+  }),
+  repositories_added: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        full_name: z.string().optional(),
+        private: z.boolean().optional(),
+      }),
+    )
+    .optional()
+    .default([]),
+  repositories_removed: z
+    .array(
+      z.object({
+        id: z.number(),
+        name: z.string(),
+        full_name: z.string().optional(),
+        private: z.boolean().optional(),
+      }),
+    )
+    .optional()
+    .default([]),
+});
+
 export type GithubPullRequestPayload = z.infer<typeof GithubPullRequestPayloadSchema>;
 export type GithubInstallationPayload = z.infer<typeof GithubInstallationPayloadSchema>;
+export type GithubPushPayload = z.infer<typeof GithubPushPayloadSchema>;
+export type GithubInstallationRepositoriesPayload = z.infer<
+  typeof GithubInstallationRepositoriesPayloadSchema
+>;

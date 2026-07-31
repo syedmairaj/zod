@@ -2,13 +2,37 @@
 
 ## Current phase
 
-**Authentication experience (post Milestone 1):** GitHub OAuth + Google OAuth +
-email magic-link fallback, intercepted sign-in modal, standalone `/sign-in`,
-beta `/terms` + `/privacy`. Marketing Phases 1–10 and MVP Milestone 1 (Gate 1)
-remain complete. **Do not begin Milestone 2** in this pass.
+**Housekeeping:** Removed accidental duplicate migrations under
+`packages/db/migrations/supabase/` (Supabase CLI nest). Canonical SQL is only
+`packages/db/migrations/*.sql`.
+
+**M2 fix — webhook_deliveries.action:** Root cause was claim-time hard-coded
+`null` (not event-parser drop). `extractGithubWebhookAction` now persists
+top-level GitHub `action` on claim/reject; push/ping stay null. No migration.
+
+**Milestone 2 — Webhook ingestion (Gate 2):** thin `/api/github/webhook` route;
+domain logic in `packages/github/{signature,event-parser,webhook}`, queue handoff
+in `packages/queue`, shared errors/logging/types in `packages/shared`. Migration
+`0004_webhook_ingestion_queue.sql`. Marketing Phases 1–10, auth UX, and Milestone 1
+remain complete. **Do not begin Milestone 3+ (workers/sandbox/validators) without
+a separate go-ahead.**
 
 ## Completed
 
+- **Milestone 2 webhook ingestion (Gate 2):** Reorganized GitHub webhook stack into
+  `packages/github/signature`, `event-parser`, and `webhook/process-delivery`;
+  added `packages/shared` (errors, structured logging, config, queue types) and
+  `packages/queue` (`enqueueValidationJob` → `validation_runs` row, no execution).
+  Thin Next route only parses HTTP → `processGithubWebhook` → JSON status.
+  Handles `ping`, `pull_request` (opened/synchronize/reopened), `push`,
+  `installation`, `installation_repositories` (removals disconnect; adds do not
+  auto-connect); unsupported events acknowledged and ignored. HMAC-SHA256 over
+  raw body; delivery-id claim via existing `webhook_deliveries` table (name kept;
+  documented as idempotency store — no rename to `github_webhook_deliveries`).
+  Migration `0004` adds nullable `pull_request_id`, `commit_sha`,
+  `webhook_delivery_id`, `push` trigger, and PR-vs-push constraints. Dashboard
+  run lists tolerate push rows without PR numbers. Manual guide:
+  `docs/mvp/testing/MILESTONE_02_WEBHOOK_INGESTION_TEST_GUIDE.md`.
 - **Authentication UX:** Shared `AuthPanel` + accessible `AuthDialog`; root
   parallel route `app/@auth/(.)sign-in` for marketing soft-nav modal; hard
   `/sign-in` standalone page; active session redirects to `/post-auth`.
@@ -20,13 +44,12 @@ remain complete. **Do not begin Milestone 2** in this pass.
   in `lib/auth-events.ts`. Beta legal pages `/terms` and `/privacy`. Test
   guide: `docs/mvp/testing/AUTHENTICATION_AND_SIGNIN_TEST_GUIDE.md`.
 - Product positioning, MVP scope, architecture, AI validation strategy, security/sandbox principles, initial data model, and design direction documented (Phase 0).
-- TypeScript npm-workspaces monorepo (`apps/web`, `packages/shared-types`, `packages/db`, `packages/github`).
+- TypeScript npm-workspaces monorepo (`apps/web`, `packages/shared-types`, `packages/db`, `packages/github`, `packages/shared`, `packages/queue`).
 - Next.js App Router application with a dark, evidence-oriented UI consistent with `DESIGN_SYSTEM.md`.
 - Authentication via Supabase Auth (email magic link/OTP), session refresh middleware.
 - Organization + membership model (`owner`/`admin`/`developer`/`reviewer`/`billing`/`read_only` roles), org creation flow, application-level `requireOrganizationAccess` authorization choke point used by every tenant-scoped page/action/route.
 - GitHub App installation flow: signed, expiring `state` token; install-callback verification; installation linking; repository listing and selection UI.
 - **Milestone 1 hardening (Gate 1):** migration `0003_github_onboarding_hardening.sql` adds `account_id`, `permissions_json`, `installed_by_user_id`, `revoked_at` on `github_installations` and `disconnected_at` on `repositories`; immutability triggers; `linkOrRefreshInstallation` with same-org idempotent refresh and cross-org conflict; refresh/deselect/disconnect actions; permission summary UI; structured ops events; installation tokens remain ephemeral (never written to `encrypted_credentials_reference`). Manual test guide: `docs/mvp/testing/MILESTONE_01_GITHUB_ONBOARDING_TEST_GUIDE.md`.
-- GitHub webhook ingress (`/api/github/webhook`): HMAC-SHA256 signature verification over the raw body, delivery-id idempotency claim (unique constraint), `pull_request` (opened/synchronize/reopened) and `installation` (created/deleted/suspend/unsuspend) event handling.
 - Pull request revision persistence (one row per `head_sha`) and validation-run persistence (`status = 'queued'` on webhook receipt; prior revision's run marked `superseded`).
 - Dashboard: repositories list, per-repository validation-run history, org-wide recent runs, audit log page.
 - Audit events recorded for: user sign-in, organization creation, GitHub installation connect/reject, repository connection, validation run queued/superseded.
@@ -442,8 +465,11 @@ Every Cursor task must update:
 
 ## Next recommended vertical slice
 
-The landing page (and these redesign phases within it) is a self-contained detour and doesn't change the underlying product recommendation below. Per `PHASE_08_PRICING_EARLY_ACCESS_FAQ.md`'s stop condition and the user's explicit instruction, **Phase 9 of the landing-page redesign has not been started** and should not begin without a separate go-ahead.
+**Milestone 3 — Validation job queue / run orchestration:** durable leases,
+retries, cancellation, timeout, and worker claim of `validation_runs` rows
+already enqueued by Milestone 2. Do not start sandbox execution or deterministic
+validators until Gate 3 requirements are agreed.
 
-Repository profiling (Milestone 2 groundwork): on repository connection, enqueue a job (in-process for now, no queue infra yet) that clones the default branch via a short-lived installation token, detects language/framework/package manager/test runner/lint/build commands and `AGENTS.md`-equivalent instruction files, and persists a `repository_profiles` row. This is the first slice that requires *reading* repository content (still not executing it) and sets up the inputs the validation engine will need later, while staying inside "no code execution" boundaries.
-
-Separately, Milestone 2 proper (isolated sandbox worker) is still pending your input on sandbox tech/Docker access, job-queue choice, and placeholder-command scope — see the questions raised earlier in this session.
+Optional later: repository profiling (clone default branch with ephemeral
+installation token, detect toolchain / instruction files) once checkout
+boundaries from Milestone 4 are designed.

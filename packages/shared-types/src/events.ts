@@ -31,6 +31,8 @@ export const AUDIT_ACTIONS = [
   "github_installation.callback_rejected",
   "github_installation.conflict_rejected",
   "github_installation.revoked",
+  "github_installation.webhook",
+  "github_installation.repositories_changed",
   "repository.connected",
   "repository.disconnected",
   "repository.deselected",

@@ -33,7 +33,11 @@ export async function createTestInstallation(
     installationId,
     accountLogin: `account-${installationId}`,
   });
-  return { id: installation.id, installationId: installation.installation_id };
+  return {
+    id: installation.id,
+    // pg may return int8-ish values as strings; GitHub wire format is numeric.
+    installationId: Number(installation.installation_id),
+  };
 }
 
 export async function createTestRepository(
@@ -41,7 +45,7 @@ export async function createTestRepository(
   organizationId: string,
   githubInstallationId: string,
   providerRepositoryId = Math.floor(Math.random() * 1_000_000_000),
-): Promise<{ id: string; owner: string; name: string }> {
+): Promise<{ id: string; owner: string; name: string; providerRepositoryId: number }> {
   const repo = await repositoriesRepo.connectRepository(pool, {
     organizationId,
     githubInstallationId,
@@ -51,5 +55,10 @@ export async function createTestRepository(
     defaultBranch: "main",
     isPrivate: true,
   });
-  return { id: repo.id, owner: repo.owner, name: repo.name };
+  return {
+    id: repo.id,
+    owner: repo.owner,
+    name: repo.name,
+    providerRepositoryId: Number(repo.provider_repository_id),
+  };
 }

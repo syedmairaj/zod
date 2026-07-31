@@ -115,7 +115,9 @@ export interface ValidationRunRow {
   id: string;
   organization_id: string;
   repository_id: string;
-  pull_request_id: string;
+  pull_request_id: string | null;
+  commit_sha: string | null;
+  webhook_delivery_id: string | null;
   status: ValidationRunStatus;
   trigger: ValidationRunTrigger;
   risk_level: "low" | "medium" | "high" | "critical" | null;

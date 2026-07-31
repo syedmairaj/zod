@@ -5,8 +5,10 @@ import type { ValidationRunRow } from "../database.types";
 export interface CreateValidationRunInput {
   organizationId: string;
   repositoryId: string;
-  pullRequestId: string;
+  pullRequestId: string | null;
   trigger: ValidationRunTrigger;
+  commitSha?: string | null;
+  webhookDeliveryId?: string | null;
 }
 
 export async function createValidationRun(
@@ -14,10 +16,19 @@ export async function createValidationRun(
   input: CreateValidationRunInput,
 ): Promise<ValidationRunRow> {
   const result = await db.query<ValidationRunRow>(
-    `insert into validation_runs (organization_id, repository_id, pull_request_id, status, trigger)
-     values ($1, $2, $3, 'queued', $4)
+    `insert into validation_runs (
+       organization_id, repository_id, pull_request_id, commit_sha, status, trigger, webhook_delivery_id
+     )
+     values ($1, $2, $3, $4, 'queued', $5, $6)
      returning *`,
-    [input.organizationId, input.repositoryId, input.pullRequestId, input.trigger],
+    [
+      input.organizationId,
+      input.repositoryId,
+      input.pullRequestId,
+      input.commitSha ?? null,
+      input.trigger,
+      input.webhookDeliveryId ?? null,
+    ],
   );
   const row = result.rows[0];
   if (!row) {
@@ -58,9 +69,9 @@ export async function supersedeOpenRunsForPullRequest(
 }
 
 export interface ValidationRunWithContext extends ValidationRunRow {
-  provider_pr_number: number;
-  pr_title: string;
-  head_sha: string;
+  provider_pr_number: number | null;
+  pr_title: string | null;
+  head_sha: string | null;
   repository_owner: string;
   repository_name: string;
 }
@@ -71,10 +82,11 @@ export async function listValidationRunsForOrganization(
   limit = 50,
 ): Promise<ValidationRunWithContext[]> {
   const result = await db.query<ValidationRunWithContext>(
-    `select vr.*, pr.provider_pr_number, pr.title as pr_title, pr.head_sha,
+    `select vr.*, pr.provider_pr_number, pr.title as pr_title,
+            coalesce(pr.head_sha, vr.commit_sha) as head_sha,
             r.owner as repository_owner, r.name as repository_name
      from validation_runs vr
-     join pull_requests pr on pr.id = vr.pull_request_id
+     left join pull_requests pr on pr.id = vr.pull_request_id
      join repositories r on r.id = vr.repository_id
      where vr.organization_id = $1
      order by vr.created_at desc
@@ -91,10 +103,11 @@ export async function listValidationRunsForRepository(
   limit = 50,
 ): Promise<ValidationRunWithContext[]> {
   const result = await db.query<ValidationRunWithContext>(
-    `select vr.*, pr.provider_pr_number, pr.title as pr_title, pr.head_sha,
+    `select vr.*, pr.provider_pr_number, pr.title as pr_title,
+            coalesce(pr.head_sha, vr.commit_sha) as head_sha,
             r.owner as repository_owner, r.name as repository_name
      from validation_runs vr
-     join pull_requests pr on pr.id = vr.pull_request_id
+     left join pull_requests pr on pr.id = vr.pull_request_id
      join repositories r on r.id = vr.repository_id
      where vr.organization_id = $1 and vr.repository_id = $2
      order by vr.created_at desc

@@ -52,6 +52,21 @@ Pass when installation, repository selection, revocation, refresh, permission sn
 
 Pass when signatures, raw-body handling, idempotency, replay protection, and installation mapping are proven.
 
+| Check | Status |
+|---|---|
+| HMAC-SHA256 over raw body; invalid signature → 401 | Passed (unit + integration) |
+| Delivery-id claim; replay → duplicate no-op | Passed (integration) |
+| `pull_request` / `push` map install+repo and enqueue `queued` run with commit SHA | Passed (integration) |
+| Missing install / unsupported event → ignored, no queue row | Passed (integration) |
+| `installation_repositories` removals disconnect; adds do not auto-connect | Implemented (code path; live GitHub optional) |
+| No install tokens persisted/logged | Passed (code review; enqueue never stores tokens) |
+| Thin route; domain in `packages/github` + `packages/queue` + `packages/shared` | Passed |
+| Migration `0004_webhook_ingestion_queue.sql` | Passed (harness + repo copy) |
+| Typecheck / lint / unit / integration / production build | Passed (2026-07-31 local verification) |
+| Manual GitHub delivery matrix | Not tested until operators run `docs/mvp/testing/MILESTONE_02_WEBHOOK_INGESTION_TEST_GUIDE.md` |
+
+**Gate 2 overall:** Partially passed — automated requirements met when verification suite is green; live GitHub manual matrix remains **Not tested** until operators run the M2 test guide.
+
 ## Gate 3 — Run orchestration
 
 Pass when jobs are durable, lease-safe, retry-safe, exact-SHA bound, and stale-safe.

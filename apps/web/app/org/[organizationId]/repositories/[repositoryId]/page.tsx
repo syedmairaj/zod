@@ -59,9 +59,11 @@ export default async function RepositoryDetailPage({
               {runs.map((run) => (
                 <tr key={run.id}>
                   <td>
-                    #{run.provider_pr_number} {run.pr_title}
+                    {run.provider_pr_number != null
+                      ? `#${run.provider_pr_number} ${run.pr_title ?? ""}`.trim()
+                      : "push"}
                   </td>
-                  <td className="mono muted">{run.head_sha.slice(0, 7)}</td>
+                  <td className="mono muted">{run.head_sha ? run.head_sha.slice(0, 7) : "—"}</td>
                   <td className="muted">{run.trigger}</td>
                   <td>
                     <StatusBadge value={run.status} />

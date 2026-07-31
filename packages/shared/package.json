@@ -1,5 +1,5 @@
 {
-  "name": "@zod-ai/github",
+  "name": "@zod-ai/shared",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,13 +10,9 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test:unit": "vitest run --dir src"
+    "test:unit": "vitest run --dir src --passWithNoTests"
   },
   "dependencies": {
-    "@octokit/auth-app": "^7.1.3",
-    "@zod-ai/db": "*",
-    "@zod-ai/queue": "*",
-    "@zod-ai/shared": "*",
     "@zod-ai/shared-types": "*"
   },
   "devDependencies": {
