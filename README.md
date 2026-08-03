@@ -54,3 +54,4 @@ built, what isn't, and known risks.
 - AI-only findings cannot silently block high-impact work without policy support or corroborating evidence.
 - Model providers are adapters, not architectural dependencies.
 - Store model name, prompt version, rule version, and evidence for every review.
+worker test 1
