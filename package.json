@@ -10,6 +10,8 @@
   "scripts": {
     "dev": "npm run dev -w @zod-ai/web",
     "build": "npm run build -w @zod-ai/web",
+    "worker": "npm run start -w @zod-ai/worker-app",
+    "worker:smoke": "npm run smoke -w @zod-ai/worker-app",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "test": "npm run test:unit && npm run test:integration",
@@ -22,6 +24,7 @@
     "@zod-ai/queue": "*",
     "@zod-ai/shared": "*",
     "@zod-ai/shared-types": "*",
+    "@zod-ai/worker": "*",
     "pg": "^8.13.1",
     "typescript": "5.6.3",
     "vitest": "^2.1.9"

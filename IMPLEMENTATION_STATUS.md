@@ -2,37 +2,44 @@
 
 ## Current phase
 
-**Housekeeping:** Removed accidental duplicate migrations under
-`packages/db/migrations/supabase/` (Supabase CLI nest). Canonical SQL is only
-`packages/db/migrations/*.sql`.
-
-**M2 fix — webhook_deliveries.action:** Root cause was claim-time hard-coded
-`null` (not event-parser drop). `extractGithubWebhookAction` now persists
-top-level GitHub `action` on claim/reject; push/ping stay null. No migration.
-
-**Milestone 2 — Webhook ingestion (Gate 2):** thin `/api/github/webhook` route;
-domain logic in `packages/github/{signature,event-parser,webhook}`, queue handoff
-in `packages/queue`, shared errors/logging/types in `packages/shared`. Migration
-`0004_webhook_ingestion_queue.sql`. Marketing Phases 1–10, auth UX, and Milestone 1
-remain complete. **Do not begin Milestone 3+ (workers/sandbox/validators) without
-a separate go-ahead.**
+**Milestone 3 — Validation scheduler / worker control plane: Complete.
+Gate 3: Partially Passed** (automated suite green; operator live worker matrix
+pending). Milestone 2 Gate 2 remains Fully Passed. Marketing Phases 1–10, auth UX,
+and Milestone 1 remain complete. **Do not begin Milestone 4 (sandbox/checkout)
+without a separate go-ahead.**
 
 ## Completed
 
-- **Milestone 2 webhook ingestion (Gate 2):** Reorganized GitHub webhook stack into
-  `packages/github/signature`, `event-parser`, and `webhook/process-delivery`;
-  added `packages/shared` (errors, structured logging, config, queue types) and
-  `packages/queue` (`enqueueValidationJob` → `validation_runs` row, no execution).
-  Thin Next route only parses HTTP → `processGithubWebhook` → JSON status.
-  Handles `ping`, `pull_request` (opened/synchronize/reopened), `push`,
-  `installation`, `installation_repositories` (removals disconnect; adds do not
-  auto-connect); unsupported events acknowledged and ignored. HMAC-SHA256 over
-  raw body; delivery-id claim via existing `webhook_deliveries` table (name kept;
+- **Milestone 3 validation scheduler (Gate 3 — Partially Passed):** Production-grade
+  Postgres queue with atomic `FOR UPDATE SKIP LOCKED` claim, leases/heartbeats,
+  bounded retries, cancellation, timeout, and PR superseding. Structure follows
+  approved layout: `packages/queue/{contracts,publisher,scheduler,lease,retry,
+  timeout,heartbeat,cancellation,repository}`, `packages/worker/{runner,lifecycle,
+  shutdown}`, `apps/worker` (`@zod-ai/worker-app`). Safe placeholder task only
+  (`scheduler-ok` ≠ code correctness; `decision` stays null). Migration
+  `0005_validation_scheduler.sql`. Manual guide:
+  `docs/mvp/testing/MILESTONE_03_VALIDATION_SCHEDULER_TEST_GUIDE.md`. Architecture:
+  `docs/mvp/architecture/MILESTONE_03_SCHEDULER_ARCHITECTURE.md`.
+- **Milestone 2 webhook ingestion (Gate 2 — Fully Passed):** Reorganized GitHub
+  webhook stack into `packages/github/signature`, `event-parser`, and
+  `webhook/process-delivery`; added `packages/shared` (errors, structured logging,
+  config, queue types) and `packages/queue` (`enqueueValidationJob` →
+  `validation_runs` row, no execution). Thin Next route only parses HTTP →
+  `processGithubWebhook` → JSON status. Handles `ping`, `pull_request`
+  (opened/synchronize/reopened), `push`, `installation`,
+  `installation_repositories` (removals disconnect; adds do not auto-connect);
+  unsupported events acknowledged and ignored. HMAC-SHA256 over raw body;
+  delivery-id claim via existing `webhook_deliveries` table (name kept;
   documented as idempotency store — no rename to `github_webhook_deliveries`).
-  Migration `0004` adds nullable `pull_request_id`, `commit_sha`,
-  `webhook_delivery_id`, `push` trigger, and PR-vs-push constraints. Dashboard
-  run lists tolerate push rows without PR numbers. Manual guide:
+  `extractGithubWebhookAction` persists top-level GitHub `action` on claim/reject
+  (push/ping stay null). Migration `0004` adds nullable `pull_request_id`,
+  `commit_sha`, `webhook_delivery_id`, `push` trigger, and PR-vs-push constraints.
+  Dashboard run lists tolerate push rows without PR numbers. Manual guide:
   `docs/mvp/testing/MILESTONE_02_WEBHOOK_INGESTION_TEST_GUIDE.md`.
+  **Live verification (operator-confirmed):** GitHub App webhook delivery;
+  signature verification; idempotency; pull_request opened + synchronize; repository
+  added/removed (`installation_repositories`); queue creation + superseding; action
+  persistence; automated tests; production build.
 - **Authentication UX:** Shared `AuthPanel` + accessible `AuthDialog`; root
   parallel route `app/@auth/(.)sign-in` for marketing soft-nav modal; hard
   `/sign-in` standalone page; active session redirects to `/post-auth`.
@@ -114,8 +121,7 @@ a separate go-ahead.**
   - Kept Phase 1 `GlowBorder` primitive (design-system surface; unused in page bodies by design).
 
 - Repository profiling / snapshotting
-- Queue / job orchestration
-- Sandbox worker and isolated execution
+- Sandbox worker and isolated execution (Milestone 4)
 - Deterministic validators (typecheck/lint/test/build/secret-scan/etc.)
 - Context builder / retrieval
 - AI gateway and primary/independent review
@@ -124,6 +130,25 @@ a separate go-ahead.**
 - Policy engine / project rules editor
 - Billing and usage metering
 - Production deployment and observability (OpenTelemetry/Sentry)
+
+## Files / modules added (Milestone 3)
+
+```
+packages/db/migrations/0005_validation_scheduler.sql
+packages/db/src/database.types.ts          scheduler columns + status vocabulary
+packages/db/src/repositories/validation-runs.ts  supersede active scheduler states
+packages/shared-types/src/statuses.ts      claimed/preparing/collecting/completed/...
+packages/shared-types/src/events.ts        scheduler audit action names
+packages/shared/src/config/scheduler.ts    validated worker/scheduler config
+packages/shared/src/time/index.ts          clock + sleep
+packages/queue/src/{contracts,publisher,scheduler,lease,retry,timeout,
+                    heartbeat,cancellation,repository}/
+packages/worker/src/{runner,lifecycle,shutdown}/
+apps/worker/                               @zod-ai/worker-app entry + smoke
+tests/integration/specs/validation-scheduler.test.ts
+docs/mvp/architecture/MILESTONE_03_SCHEDULER_ARCHITECTURE.md
+docs/mvp/testing/MILESTONE_03_VALIDATION_SCHEDULER_TEST_GUIDE.md
+```
 
 ## Files / modules added (landing-page redesign Phase 1: Design Foundation)
 
@@ -323,6 +348,12 @@ tests/integration/
 
 ## Migrations
 
+- `0005_validation_scheduler.sql`: scheduler status vocabulary; lease/heartbeat/
+  attempt/available_at/cancellation/timeout/failure/run_version/scheduler_result_json/
+  updated_at; claim + stale-lease indexes; `validation_runs` updated_at trigger.
+  Legacy unused `error`/`passed`/`inconclusive` statuses mapped to
+  `failed`/`completed` before re-check. Additive; rollback = drop new columns/
+  indexes/trigger and restore prior status check.
 - `0001_init.sql`: creates `organizations`, `organization_members`, `github_installations`, `repositories`, `pull_requests`, `validation_runs`, `audit_events`, `webhook_deliveries`; FK indexes; `(organization_id, created_at)` indexes on activity tables; enum-like `check` constraints; `updated_at` triggers.
   - **Deviation from `DATABASE_SCHEMA.md`**: added `webhook_deliveries` (not in the original table list) because the doc requires "a unique idempotency key for webhook processing" but names no table for it. `organization_id` is nullable there only (operational/idempotency ledger, not user-facing product data).
 - `0002_rls.sql`: enables RLS on every tenant table, adds a `security definer` `is_org_member()` helper, `SELECT`-only policies + grants for `authenticated`. No `authenticated`/`anon` write policies exist anywhere; all writes go through the server-side pool after `requireOrganizationAccess`.
@@ -331,7 +362,14 @@ tests/integration/
 
 ## Tests run (actually executed in this environment)
 
-- `npm run test:unit` — 79 tests, all passing (32 Milestone-1 + 17 original landing-page + 25 Design Foundation primitive tests + **5 new** `ValidationConsole` tests, see below):
+- **Milestone 3 verification (this session):** `npm run typecheck` clean;
+  `npm run lint` clean; `npm run test:unit` green (includes new queue/worker/shared
+  scheduler unit tests); `npm run test:integration` **46/46** green (includes
+  13 new `validation-scheduler` specs + M1/M2 regressions); `npm run build`
+  clean. Worker live smoke against a provisioned Supabase DB was not run here
+  (no `DATABASE_URL` to a long-lived project in this environment).
+- `npm run test:unit` — historical baseline plus Milestone 3 additions (queue state
+  machine/backoff/timeout, shared scheduler config, worker placeholder/shutdown):
   - `packages/github`: webhook signature verification (valid/invalid/tampered/missing/malformed/empty-secret), AES-256-GCM round-trip + tamper/wrong-key rejection, install-state token sign/verify/tamper/expiry.
   - `packages/db`: `requireOrganizationAccess` authorization matrix (member, non-member, wrong org, wrong role, right role, missing ids).
   - `apps/web` (landing page): `SiteHeader`/`MobileNav` (auth-aware CTA hrefs, in-page-anchor-only nav, dialog open/close), `Hero` (single `<h1>`, CTA target), `Faq` (accordion open/close), `EvidenceTabs` (click + arrow-key switching, `aria-selected`), `ValidationDemo` (interactive-preview label, reduced-motion manual stepping, auto-play/pause via fake timers — kept passing even though unused by `Hero` now), `useReducedMotion`. See `LANDING_PAGE_IMPLEMENTATION.md` for detail.
@@ -366,6 +404,11 @@ Not executed (infrastructure not available in this environment): a live Supabase
 
 ## Known issues / unresolved risks
 
+0. **Gate 3 live/manual worker matrix not run in this environment** (two-worker
+   concurrency against a long-lived DB, kill -9 crash recovery, live webhook→worker
+   path). Automated integration coverage exists; operators should run
+   `docs/mvp/testing/MILESTONE_03_VALIDATION_SCHEDULER_TEST_GUIDE.md` before
+   calling Gate 3 Fully Passed.
 1. **No live Supabase or GitHub App was provisioned or exercised end-to-end.** Everything downstream of "does GitHub actually deliver a webhook / complete an install callback to this exact code" is unverified against the real services. The webhook signature verification, idempotency, and persistence logic *are* verified against real Postgres; the HTTP layer wiring them together is not integration-tested against a running Next.js server in this pass.
 2. **`packages/db/src/database.types.ts` is hand-maintained**, not generated from a linked Supabase project. It must be kept in sync with migrations by hand until a real project exists and CI can regenerate it.
 3. **`npm audit` reports vulnerabilities in the `next`/`postcss` dependency chain** even at the latest Next.js 14.2.x patch (14.2.35). Some advisories are only fixed in Next 15/16, which is a major-version migration (React 19, breaking changes) intentionally out of scope for this milestone. Tracked as a risk to revisit; recommend adding Dependabot/`npm audit` to CI.
@@ -465,11 +508,8 @@ Every Cursor task must update:
 
 ## Next recommended vertical slice
 
-**Milestone 3 — Validation job queue / run orchestration:** durable leases,
-retries, cancellation, timeout, and worker claim of `validation_runs` rows
-already enqueued by Milestone 2. Do not start sandbox execution or deterministic
-validators until Gate 3 requirements are agreed.
-
-Optional later: repository profiling (clone default branch with ephemeral
-installation token, detect toolchain / instruction files) once checkout
-boundaries from Milestone 4 are designed.
+**Milestone 4 — Repository checkout and execution boundary:** exact-SHA clone
+using ephemeral installation tokens, credential removal before any command,
+workspace isolation/cleanup, and resource limits. Replace the Milestone 3
+placeholder only inside `packages/worker` lifecycle — keep claim/lease/finalize
+in `packages/queue`. Do not start deterministic validators until Gate 4 passes.

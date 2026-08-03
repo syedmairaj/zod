@@ -54,22 +54,47 @@ Pass when signatures, raw-body handling, idempotency, replay protection, and ins
 
 | Check | Status |
 |---|---|
-| HMAC-SHA256 over raw body; invalid signature → 401 | Passed (unit + integration) |
-| Delivery-id claim; replay → duplicate no-op | Passed (integration) |
-| `pull_request` / `push` map install+repo and enqueue `queued` run with commit SHA | Passed (integration) |
+| HMAC-SHA256 over raw body; invalid signature → 401 | Passed (unit + integration + live) |
+| Delivery-id claim; replay → duplicate no-op | Passed (integration + live idempotency) |
+| `pull_request` / `push` map install+repo and enqueue `queued` run with commit SHA | Passed (integration + live opened/synchronize) |
 | Missing install / unsupported event → ignored, no queue row | Passed (integration) |
-| `installation_repositories` removals disconnect; adds do not auto-connect | Implemented (code path; live GitHub optional) |
+| `installation_repositories` removals disconnect; adds do not auto-connect | Passed (live: repository removed + added) |
+| Queue creation + PR superseding | Passed (live) |
+| `webhook_deliveries.action` persistence | Passed (live + tests) |
 | No install tokens persisted/logged | Passed (code review; enqueue never stores tokens) |
 | Thin route; domain in `packages/github` + `packages/queue` + `packages/shared` | Passed |
-| Migration `0004_webhook_ingestion_queue.sql` | Passed (harness + repo copy) |
-| Typecheck / lint / unit / integration / production build | Passed (2026-07-31 local verification) |
-| Manual GitHub delivery matrix | Not tested until operators run `docs/mvp/testing/MILESTONE_02_WEBHOOK_INGESTION_TEST_GUIDE.md` |
+| Migration `0004_webhook_ingestion_queue.sql` | Passed |
+| Typecheck / lint / unit / integration / production build | Passed |
+| Manual GitHub delivery matrix | Passed (operator live verification 2026-07-31) |
 
-**Gate 2 overall:** Partially passed — automated requirements met when verification suite is green; live GitHub manual matrix remains **Not tested** until operators run the M2 test guide.
+**Gate 2 overall:** Fully passed — automated suite green and live GitHub verification completed (webhook delivery, signatures, idempotency, PR opened/synchronize, repository added/removed, queue creation/superseding, action persistence).
 
 ## Gate 3 — Run orchestration
 
 Pass when jobs are durable, lease-safe, retry-safe, exact-SHA bound, and stale-safe.
+
+| Check | Status |
+|---|---|
+| Worker process separate from Next.js (`apps/worker`) | Passed (code + unit/integration) |
+| Atomic claim via `FOR UPDATE SKIP LOCKED` | Passed (integration concurrency) |
+| Duplicate ownership impossible | Passed (integration) |
+| Lease + heartbeat ownership-scoped | Passed (integration) |
+| Crashed lease recovery / requeue or fail | Passed (integration) |
+| Stale worker cannot finalize after reclaim | Passed (integration) |
+| Bounded retries + backoff; SHA unchanged | Passed (unit + integration) |
+| Cancellation (queued + active) | Passed (integration) |
+| Timeout → `timed_out`; late complete ignored | Passed (integration) |
+| PR superseding; unrelated PR untouched | Passed (integration) |
+| Scheduler `completed` ≠ code correctness (`decision` null) | Passed (integration) |
+| No repository code execution (placeholder only) | Passed (code review) |
+| Tenant isolation / org-scoped mutations | Passed (integration + existing RLS) |
+| Migration `0005_validation_scheduler.sql` | Passed (integration harness) |
+| Typecheck / lint / unit / integration / production build | Passed (automated this session) |
+| Manual worker matrix (two-worker, kill -9, live enqueue) | Not tested in this environment (operator guide ready) |
+
+**Gate 3 overall:** Partially passed — automated suite green; live/manual worker
+matrix remains operator-run per
+`docs/mvp/testing/MILESTONE_03_VALIDATION_SCHEDULER_TEST_GUIDE.md`.
 
 ## Gate 4 — Execution boundary
 

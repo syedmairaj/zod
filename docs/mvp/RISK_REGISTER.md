@@ -13,6 +13,8 @@
 | Large repository cost and latency | Medium | High | Size limits, caching, timeouts, alpha allowlist | No for controlled alpha |
 | Dependency scanner instability | Medium | Medium | Tool pinning, error classification, optional policy mode | No |
 | Secret exposure in evidence excerpts | Critical | Low | Redaction, hashing, bounded excerpts, secret scanner integration | Yes |
+| Worker crash leaves leased run stuck | High | Medium | Lease expiry + reclaim/requeue; ownership-scoped finalize; max attempts | Yes for Gate 3 |
+| Scheduler `completed` misread as code pass | High | Medium | Keep `decision` null; docs/UI distinguish scheduler vs validation | Yes |
 | GitHub outage | Medium | Medium | Durable queue, retries, clear operational status | No |
 | AI provider outage | Medium | Medium | Feature flags and deterministic-only fallback | No |
 | Unclear pricing before validation | Low | High | Keep pricing planned; collect usage and willingness-to-pay data | No |

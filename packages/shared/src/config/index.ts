@@ -1,6 +1,7 @@
 /**
  * Lightweight shared config helpers. Package-specific env validation remains
- * in apps/web (getServerEnv / getPublicEnv); this module holds constants only.
+ * in apps (getServerEnv / worker env); this module holds constants and
+ * scheduler config parsing used by the queue/worker control plane.
  */
 
 export const GITHUB_WEBHOOK_SIGNATURE_HEADER = "x-hub-signature-256";
@@ -17,3 +18,11 @@ export const MILESTONE_2_WEBHOOK_EVENTS = [
 ] as const;
 
 export type Milestone2WebhookEvent = (typeof MILESTONE_2_WEBHOOK_EVENTS)[number];
+
+export {
+  DEFAULT_SCHEDULER_CONFIG,
+  schedulerConfigFromEnv,
+  schedulerEnvSchema,
+  type SchedulerConfig,
+  type SchedulerEnv,
+} from "./scheduler";

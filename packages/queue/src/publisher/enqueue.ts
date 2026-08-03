@@ -1,11 +1,11 @@
 import type { Queryable } from "@zod-ai/db";
 import type { EnqueuedValidationJob, EnqueueValidationJobInput } from "@zod-ai/shared";
 import { logStructured } from "@zod-ai/shared";
+import { commitShaPrefix } from "../contracts/events";
 
 /**
  * Enqueues a validation job by persisting a `validation_runs` row with
- * status `queued`. Milestone 2 does not execute jobs — Milestone 3+ workers
- * will lease these rows. Installation tokens are never stored here.
+ * status `queued`. Does not execute jobs. Installation tokens are never stored.
  */
 export async function enqueueValidationJob(
   db: Queryable,
@@ -18,12 +18,14 @@ export async function enqueueValidationJob(
     pull_request_id: string | null;
     commit_sha: string | null;
     trigger: EnqueueValidationJobInput["trigger"];
+    max_attempts: number;
   }>(
     `insert into validation_runs (
-       organization_id, repository_id, pull_request_id, commit_sha, status, trigger, webhook_delivery_id
+       organization_id, repository_id, pull_request_id, commit_sha, status, trigger,
+       webhook_delivery_id, available_at, attempt_count, max_attempts
      )
-     values ($1, $2, $3, $4, 'queued', $5, $6)
-     returning id, organization_id, repository_id, pull_request_id, commit_sha, trigger`,
+     values ($1, $2, $3, $4, 'queued', $5, $6, now(), 0, coalesce($7, 3))
+     returning id, organization_id, repository_id, pull_request_id, commit_sha, trigger, max_attempts`,
     [
       input.organizationId,
       input.repositoryId,
@@ -31,6 +33,7 @@ export async function enqueueValidationJob(
       input.commitSha,
       input.trigger,
       input.deliveryId,
+      input.maxAttempts ?? null,
     ],
   );
 
@@ -44,7 +47,7 @@ export async function enqueueValidationJob(
     repository_id: row.repository_id,
     job_id: row.id,
     trigger: row.trigger,
-    commit_sha: row.commit_sha,
+    commit_sha_prefix: commitShaPrefix(row.commit_sha),
     operation: "enqueue",
     result: "ok",
   });

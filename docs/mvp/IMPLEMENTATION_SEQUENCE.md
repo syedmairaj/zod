@@ -15,11 +15,11 @@
 8. Implement raw-body webhook verification.
 9. Add delivery idempotency.
 10. Create exact-SHA validation runs.
-11. Add durable queue, lease, retry, and superseding logic.
+11. Add durable queue, lease, retry, and superseding logic. **(Milestone 3 — implemented; Gate 3 Partially passed pending operator live matrix)**
 
 ## Phase C — Controlled execution
 
-12. Implement exact commit checkout.
+12. Implement exact commit checkout. **(next: Milestone 4 — not started)**
 13. Remove credentials before command execution.
 14. Add workspace isolation and cleanup.
 15. Add CPU, memory, PID, disk, time, network, and log limits.

@@ -1,5 +1,5 @@
 /**
- * Hand-authored types mirroring migrations/0001_init.sql.
+ * Hand-authored types mirroring packages/db/migrations.
  *
  * In a provisioned Supabase project these would be regenerated with
  * `supabase gen types typescript --linked > packages/db/src/database.types.ts`
@@ -21,16 +21,20 @@ export type RepositoryStatus = "active" | "disconnected";
 export type PullRequestState = "open" | "closed" | "merged";
 export type ValidationRunStatus =
   | "queued"
+  | "claimed"
+  | "preparing"
   | "running"
-  | "passed"
+  | "collecting"
+  | "completed"
   | "failed"
-  | "inconclusive"
-  | "error"
+  | "timed_out"
+  | "cancelled"
   | "superseded";
 export type ValidationRunTrigger =
   | "pull_request_opened"
   | "pull_request_synchronize"
   | "pull_request_reopened"
+  | "push"
   | "manual";
 export type ValidationRunDecision =
   | "pass"
@@ -125,6 +129,21 @@ export interface ValidationRunRow {
   superseded_by: string | null;
   started_at: string | null;
   completed_at: string | null;
+  claimed_at: string | null;
+  claimed_by: string | null;
+  lease_expires_at: string | null;
+  heartbeat_at: string | null;
+  attempt_count: number;
+  max_attempts: number;
+  available_at: string;
+  cancellation_requested_at: string | null;
+  cancelled_at: string | null;
+  timeout_at: string | null;
+  failure_code: string | null;
+  failure_message: string | null;
+  run_version: number;
+  updated_at: string;
+  scheduler_result_json: Record<string, unknown> | null;
   created_at: string;
 }
 

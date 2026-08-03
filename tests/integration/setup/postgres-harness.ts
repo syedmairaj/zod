@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { Client } from "pg";
@@ -96,12 +96,12 @@ async function applySchema(config: TestDbConfig, socketDir: string, port: number
   try {
     await client.query(readFileSync(SHIM_SQL_PATH, "utf8"));
 
-    const migrationFiles = [
-      "0001_init.sql",
-      "0002_rls.sql",
-      "0003_github_onboarding_hardening.sql",
-      "0004_webhook_ingestion_queue.sql",
-    ];
+    const migrationFiles = readdirSync(MIGRATIONS_DIR)
+      .filter((file) => /^\d{4}_.+\.sql$/.test(file))
+      .sort();
+    if (migrationFiles.length === 0) {
+      throw new Error(`No migration files found in ${MIGRATIONS_DIR}`);
+    }
     for (const file of migrationFiles) {
       const filePath = path.join(MIGRATIONS_DIR, file);
       if (!existsSync(filePath)) {

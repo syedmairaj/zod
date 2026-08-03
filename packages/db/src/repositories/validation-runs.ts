@@ -38,11 +38,10 @@ export async function createValidationRun(
 }
 
 /**
- * Marks any still-pending validation runs for earlier revisions of the same
- * pull request (by provider_pr_number) as superseded by the new run, per
- * ARCHITECTURE.md 9 ("Cancel superseded PR runs"). Actual cancellation of
- * in-flight work happens in the (not-yet-built) orchestrator; this is the
- * persistence-layer bookkeeping only.
+ * Marks still-open validation runs for earlier revisions of the same
+ * pull request (by provider_pr_number) as superseded by the new run.
+ * Includes scheduler active states so in-flight workers cannot finalize.
+ * Prefer `@zod-ai/queue` supersede helper when structured logging is needed.
  */
 export async function supersedeOpenRunsForPullRequest(
   db: Queryable,
@@ -54,14 +53,20 @@ export async function supersedeOpenRunsForPullRequest(
 ): Promise<string[]> {
   const result = await db.query<{ id: string }>(
     `update validation_runs vr
-     set status = 'superseded', superseded_by = $5
+     set
+       status = 'superseded',
+       superseded_by = $5,
+       completed_at = coalesce(vr.completed_at, now()),
+       claimed_by = null,
+       lease_expires_at = null,
+       cancellation_requested_at = coalesce(vr.cancellation_requested_at, now())
      from pull_requests pr
      where vr.pull_request_id = pr.id
        and vr.organization_id = $1
        and vr.repository_id = $2
        and pr.provider_pr_number = $3
        and pr.id <> $4
-       and vr.status in ('queued', 'running')
+       and vr.status in ('queued', 'claimed', 'preparing', 'running', 'collecting')
      returning vr.id`,
     [organizationId, repositoryId, providerPrNumber, keepPullRequestId, supersededByRunId],
   );

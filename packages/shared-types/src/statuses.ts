@@ -16,19 +16,42 @@ export const PULL_REQUEST_STATES = ["open", "closed", "merged"] as const;
 export type PullRequestState = (typeof PULL_REQUEST_STATES)[number];
 
 /**
- * Milestone 1 only ever creates `queued` and transitions a superseded
- * revision's run to `superseded`. Later milestones add the remaining values.
+ * Scheduler / worker lifecycle statuses (Milestone 3).
+ * Code-correctness outcomes live on `decision`, not here.
+ * `completed` means the scheduler placeholder finished — not that code is correct.
  */
 export const VALIDATION_RUN_STATUSES = [
   "queued",
+  "claimed",
+  "preparing",
   "running",
-  "passed",
+  "collecting",
+  "completed",
   "failed",
-  "inconclusive",
-  "error",
+  "timed_out",
+  "cancelled",
   "superseded",
 ] as const;
 export type ValidationRunStatus = (typeof VALIDATION_RUN_STATUSES)[number];
+
+/** Statuses that still own (or may own) a worker lease. */
+export const VALIDATION_RUN_ACTIVE_STATUSES = [
+  "claimed",
+  "preparing",
+  "running",
+  "collecting",
+] as const;
+export type ValidationRunActiveStatus = (typeof VALIDATION_RUN_ACTIVE_STATUSES)[number];
+
+/** Terminal statuses that must not be casually rewritten. */
+export const VALIDATION_RUN_FINAL_STATUSES = [
+  "completed",
+  "failed",
+  "timed_out",
+  "cancelled",
+  "superseded",
+] as const;
+export type ValidationRunFinalStatus = (typeof VALIDATION_RUN_FINAL_STATUSES)[number];
 
 export const VALIDATION_RUN_TRIGGERS = [
   "pull_request_opened",

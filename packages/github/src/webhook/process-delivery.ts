@@ -3,11 +3,10 @@ import {
   githubInstallationsRepo,
   pullRequestsRepo,
   repositoriesRepo,
-  validationRunsRepo,
   webhookDeliveriesRepo,
   type Queryable,
 } from "@zod-ai/db";
-import { enqueueValidationJob } from "@zod-ai/queue";
+import { enqueueValidationJob, supersedeOpenRunsForPullRequest } from "@zod-ai/queue";
 import {
   BadRequestError,
   UnauthorizedError,
@@ -265,7 +264,7 @@ async function handlePullRequestEvent(
     deliveryId,
   });
 
-  await validationRunsRepo.supersedeOpenRunsForPullRequest(
+  await supersedeOpenRunsForPullRequest(
     db,
     repoRow.organization_id,
     repoRow.id,

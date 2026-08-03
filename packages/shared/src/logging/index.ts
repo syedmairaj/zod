@@ -5,7 +5,7 @@
 
 const REDACT_KEYS = /token|secret|password|authorization|private[_-]?key|pem|credential|signature/i;
 
-export type LogLevel = "info" | "warn" | "error";
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export interface LogFields {
   [key: string]: unknown;
@@ -27,6 +27,13 @@ export function logStructured(level: LogLevel, event: string, fields: LogFields 
   }
   if (level === "warn") {
     console.warn(line);
+    return;
+  }
+  if (level === "debug") {
+    // Heartbeats and high-frequency lease renewals — avoid info noise.
+    if (process.env.LOG_LEVEL === "debug" || process.env.NODE_ENV === "test") {
+      console.debug(line);
+    }
     return;
   }
   console.info(line);

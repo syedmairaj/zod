@@ -35,6 +35,8 @@ export interface EnqueueValidationJobInput {
   commitSha: string;
   trigger: QueueJobTrigger;
   deliveryId: string;
+  /** Optional override; defaults to SchedulerConfig.maxAttempts on insert. */
+  maxAttempts?: number;
 }
 
 export interface EnqueuedValidationJob {
@@ -45,4 +47,20 @@ export interface EnqueuedValidationJob {
   commitSha: string;
   trigger: QueueJobTrigger;
   status: "queued";
+}
+
+/** Safe placeholder modes for Milestone 3 (no shell / no repo code). */
+export type PlaceholderMode =
+  | "success"
+  | "retryable_failure"
+  | "non_retryable_failure"
+  | "timeout"
+  | "cancellation"
+  | "crash";
+
+export interface SchedulerPlaceholderResult {
+  status: "scheduler-ok" | "scheduler-failed";
+  workerId: string;
+  attempt: number;
+  mode: PlaceholderMode;
 }

@@ -200,12 +200,18 @@ code,
   border: 1px solid var(--border);
 }
 
-.badge-queued {
+.badge-queued,
+.badge-claimed,
+.badge-preparing,
+.badge-running,
+.badge-collecting {
   color: var(--warning);
   border-color: color-mix(in srgb, var(--warning) 40%, var(--border));
 }
 
-.badge-superseded {
+.badge-superseded,
+.badge-cancelled,
+.badge-timed_out {
   color: var(--text-secondary);
 }
 
@@ -214,7 +220,8 @@ code,
   color: var(--danger);
 }
 
-.badge-passed {
+.badge-passed,
+.badge-completed {
   color: var(--success);
 }
 

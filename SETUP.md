@@ -1,9 +1,9 @@
 # Setup
 
-This covers Milestone 1: sign-in, organization creation, GitHub App
-installation, repository connection, verified webhook ingestion, and the
-dashboard. It does not cover sandbox execution, deterministic checks, or AI
-review (not implemented yet).
+This covers auth, organization creation, GitHub App installation, repository
+connection, verified webhook ingestion, the dashboard, and the Milestone 3
+validation worker/scheduler. It does not cover sandbox execution, deterministic
+checks, or AI review (not implemented yet).
 
 ## 1. Prerequisites
 
@@ -36,6 +36,7 @@ npm install
    - `packages/db/migrations/0002_rls.sql`
    - `packages/db/migrations/0003_github_onboarding_hardening.sql`
    - `packages/db/migrations/0004_webhook_ingestion_queue.sql`
+   - `packages/db/migrations/0005_validation_scheduler.sql`
 
    Example with `psql`:
 
@@ -44,6 +45,7 @@ npm install
    psql "$DATABASE_URL" -f packages/db/migrations/0002_rls.sql
    psql "$DATABASE_URL" -f packages/db/migrations/0003_github_onboarding_hardening.sql
    psql "$DATABASE_URL" -f packages/db/migrations/0004_webhook_ingestion_queue.sql
+   psql "$DATABASE_URL" -f packages/db/migrations/0005_validation_scheduler.sql
    ```
 
    Do **not** apply `tests/integration/setup/supabase-shim.sql` to a real
@@ -150,6 +152,21 @@ development, run your tunnel first and point the GitHub App's Webhook URL and
 `NEXT_PUBLIC_APP_URL` at the tunnel's HTTPS URL so the install callback and
 webhook deliveries can reach your machine.
 
+### Validation worker (Milestone 3)
+
+The worker is a **separate long-running process** (not Next.js). It claims
+queued `validation_runs`, holds leases, and runs a safe scheduler placeholder
+only — it does not clone repositories or execute untrusted code.
+
+```bash
+# Requires DATABASE_URL (and optional scheduler vars from .env.example)
+export DATABASE_URL="postgresql://..."
+npm run worker          # long-running poll loop
+npm run worker:smoke    # one poll cycle then exit
+```
+
+See `docs/mvp/testing/MILESTONE_03_VALIDATION_SCHEDULER_TEST_GUIDE.md`.
+
 ### Troubleshooting: homepage looks unstyled, or `next dev` 404s on `/`
 
 If `npm run dev` serves a bare, unstyled "404: This page could not be found"
@@ -180,7 +197,10 @@ npm run dev
 3. GitHub sends a `pull_request` webhook; it should appear within seconds as
    a `queued` validation run on the organization dashboard and on the
    repository detail page.
-4. Check the "Audit log" page for `repository.connected`,
+4. With `npm run worker` running (and migration `0005` applied), the run
+   progresses through scheduler states to `completed` (scheduler placeholder
+   only — not a code-correctness verdict).
+5. Check the "Audit log" page for `repository.connected`,
    `github_installation.connected`, and `validation_run.queued` entries.
 
 ## 9. Running tests

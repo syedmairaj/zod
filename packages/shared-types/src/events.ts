@@ -39,7 +39,16 @@ export const AUDIT_ACTIONS = [
   "webhook.received",
   "webhook.rejected",
   "validation_run.queued",
+  "validation_run.claimed",
+  "validation_run.started",
+  "validation_run.retry_scheduled",
+  "validation_run.lease_expired",
+  "validation_run.cancel_requested",
+  "validation_run.cancelled",
   "validation_run.superseded",
+  "validation_run.timed_out",
+  "validation_run.completed",
+  "validation_run.failed",
   "github_api.failed",
 ] as const;
 
