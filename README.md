@@ -55,3 +55,4 @@ built, what isn't, and known risks.
 - Model providers are adapters, not architectural dependencies.
 - Store model name, prompt version, rule version, and evidence for every review.
 worker test 1
+worker test 2
